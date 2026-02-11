@@ -1,4 +1,4 @@
-from .models import Claim, Settlement, InspectionReport
+from .models import Claim, InspectionReport, Settlement
 from rest_framework import serializers
 
 class ClaimSerializer(serializers.ModelSerializer):
@@ -6,7 +6,7 @@ class ClaimSerializer(serializers.ModelSerializer):
         model = Claim
         fields = '__all__'
 
-class InsurancePolicySerializer(serializers.ModelSerializer):
+class InspectionReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = InspectionReport
         fields = '__all__'
@@ -15,4 +15,3 @@ class SettlementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Settlement
         fields = '__all__'
-        

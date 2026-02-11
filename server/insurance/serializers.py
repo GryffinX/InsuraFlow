@@ -1,4 +1,4 @@
-from .models import Insurer, Agent, ServiceProvider, Policy, Surveyor
+from .models import Insurer, Agent, ServiceProvider, Surveyor, Policy
 from rest_framework import serializers
 
 class InsurerSerializer(serializers.ModelSerializer):
@@ -26,4 +26,3 @@ class SurveyorSerializer(serializers.ModelSerializer):
         model = Surveyor
         fields = '__all__'
 
-        
