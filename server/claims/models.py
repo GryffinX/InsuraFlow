@@ -43,7 +43,7 @@ class InspectionReport(models.Model):
         return f"Inspection for Claim: {self.claim.id}"
     
 
-class Settlements(models.Model):
+class Settlement(models.Model):
 
     PAYMENT_MODES = [
         ('bank','Bank'),
