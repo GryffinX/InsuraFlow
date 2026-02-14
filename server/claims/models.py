@@ -12,6 +12,7 @@ class Claim(models.Model):
         ('under_review','Under Review'),
         ('approved','Approved'),
         ('rejected','Rejected'),
+        ("settled", "Settled"),
     ]
 
     policy = models.ForeignKey(Policy, on_delete=models.CASCADE, related_name='claims')
