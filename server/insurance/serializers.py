@@ -17,6 +17,8 @@ class ServiceProviderSerializer(serializers.ModelSerializer):
         fields = '__all__'
         
 class PolicySerializer(serializers.ModelSerializer):
+    insurer = InsurerSerializer(read_only=True)
+    agent = AgentSerializer(read_only=True)
     class Meta:
         model = Policy
         fields = '__all__'
