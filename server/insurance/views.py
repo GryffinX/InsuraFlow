@@ -1,10 +1,16 @@
-from rest_framework import viewsets
-from .models import Insurer, Agent, Policy, ServiceProvider, Surveyor
-from .serializers import InsurerSerializer, AgentSerializer, PolicySerializer, ServiceProviderSerializer, SurveyorSerializer
-from accounts.permissions import IsAdmin, IsAgentOrAdmin
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+from accounts.permissions import IsAdmin, IsAgentOrAdmin
+from .models import Insurer, Agent, Policy, ServiceProvider, Surveyor
+from .serializers import (
+    InsurerSerializer, AgentSerializer, PolicySerializer, 
+    ServiceProviderSerializer, SurveyorSerializer
+)
+from . import services
+
 # Create your views here.
 
 class InsurerViewSet(viewsets.ModelViewSet):
@@ -29,38 +35,43 @@ class SurveyorViewSet(viewsets.ModelViewSet):
 
 class PolicyViewSet(viewsets.ModelViewSet):
     serializer_class = PolicySerializer
-    permission_classes = [IsAuthenticated, IsAgentOrAdmin]
+    
+    def get_permissions(self):
+        if self.action in ["activate", "cancel"]:
+            return [IsAuthenticated(), IsAdmin()]
+        if self.action in ["list", "retrieve", "my_policies"]:
+            return [IsAuthenticated()]
+        return [IsAuthenticated(), IsAgentOrAdmin()]
+
     def get_queryset(self):
         user = self.request.user
-        if user == "agent":
+        if user.role == "agent":
             return Policy.objects.filter(agent__email=user.email)
-        if user == "admin":
+        if user.role == "admin":
             return Policy.objects.all()
         return Policy.objects.none()
     
     @action(detail=False, methods=["get"])
-    def my_policies(self, req):
-        user = req.user
+    def my_policies(self, request):
+        user = request.user
         policies = Policy.objects.filter(policy_holder=user)
         serializer = self.get_serializer(policies, many=True)
         return Response(serializer.data)
     
 
-    @action(detail=True, methods=["post"], permission_classes=[IsAdmin])
+    @action(detail=True, methods=["post"])
     def activate(self, request, pk=None):
         policy = self.get_object()
-        policy.status = "active"
-        policy.save()
+        services.activate_policy(policy)
         return Response({"message":"Policy activated"})
     
-    @action(detail=True, methods=["post"], permission_classes=[IsAdmin])
+    @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
         policy = self.get_object()
-        policy.status = "cancel"
-        policy.save()
+        services.cancel_policy(policy)
         return Response({"message":"Policy cancelled"})
     
     filterset_fields = ["status","policy_type"]
-    search_fields = ["policy_field"]
+    search_fields = ["policy_number"]
     ordering_fields = ["start_date","coverage_amount"]
 

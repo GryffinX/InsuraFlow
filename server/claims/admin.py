@@ -5,4 +5,3 @@ from .models import Claim, InspectionReport, Settlement
 
 admin.site.register(Claim)
 admin.site.register(InspectionReport)
-admin.site.register(Settlement)

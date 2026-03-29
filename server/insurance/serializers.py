@@ -19,9 +19,20 @@ class ServiceProviderSerializer(serializers.ModelSerializer):
 class PolicySerializer(serializers.ModelSerializer):
     insurer = InsurerSerializer(read_only=True)
     agent = AgentSerializer(read_only=True)
+    
     class Meta:
         model = Policy
         fields = '__all__'
+
+    def validate_coverage_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Coverage amount must be greater than zero.")
+        return value
+
+    def validate_premium_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Premium amount must be greater than zero.")
+        return value
 
 class SurveyorSerializer(serializers.ModelSerializer):
     class Meta:

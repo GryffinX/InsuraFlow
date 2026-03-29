@@ -23,7 +23,7 @@ class Claim(models.Model):
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='filed')
 
-    def _str__(self):
+    def __str__(self):
         return f"Claim: {self.id} - Policy Number: {self.policy.policy_number}"
     
 class InspectionReport(models.Model):
@@ -34,7 +34,7 @@ class InspectionReport(models.Model):
     ]
 
     claim = models.ForeignKey(Claim, on_delete=models.CASCADE, related_name='inspection')
-    surveyor = models.ForeignKey(Surveyor, on_delete=models.SET_NULL, null=True, related_name='insprection')
+    surveyor = models.ForeignKey(Surveyor, on_delete=models.SET_NULL, null=True, related_name='inspection')
     inspection_date = models.DateField(auto_now_add=True)
     damage_level = models.CharField(max_length=15, choices=DAMAGE_LEVELS)
     estimated_loss = models.DecimalField(max_digits=12, decimal_places=2)

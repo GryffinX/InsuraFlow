@@ -1,3 +1,17 @@
-.env.local
-__pycache__
+# Standard ignore
+__pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.env.local
+
+# Project specific
+erd.png
+.git/
+.gitignore
+Dockerfile
+README.md
