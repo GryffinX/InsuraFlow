@@ -41,9 +41,11 @@
 			<h1 class="text-3xl font-bold text-slate-900 tracking-tight">Policies</h1>
 			<p class="text-slate-500 mt-1">Manage and track all your insurance coverage.</p>
 		</div>
-		<Button>
-			<Plus class="w-5 h-5 mr-2" /> New Policy
-		</Button>
+		<a href="/policies/new">
+			<Button>
+				<Plus class="w-5 h-5 mr-2" /> New Policy
+			</Button>
+		</a>
 	</div>
 
 	<!-- Search & Filters -->
@@ -90,8 +92,8 @@
 							</span>
 						</div>
 						<h3 class="text-lg font-bold text-slate-900 mb-1">{policy.policy_number}</h3>
-						<p class="text-sm font-medium text-slate-500 mb-4">{policy.insurance_type}</p>
-						
+						<p class="text-sm font-medium text-slate-500 mb-4">{policy.policy_type}</p>
+
 						<div class="space-y-3 pt-4 border-t border-slate-100">
 							<div class="flex justify-between text-sm">
 								<span class="text-slate-500">Premium</span>
@@ -105,7 +107,7 @@
 					</div>
 					<div class="bg-slate-50 p-4 border-t border-slate-100 flex justify-between items-center">
 						<span class="text-xs font-medium text-slate-500">
-							Ends {new Date(policy.expiry_date).toLocaleDateString()}
+							Ends {new Date(policy.end_date).toLocaleDateString()}
 						</span>
 						<Button size="sm" variant="ghost" class="h-8">Details</Button>
 					</div>

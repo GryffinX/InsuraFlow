@@ -32,10 +32,12 @@ schema_view = get_schema_view(
 )
 
 
+from accounts.views import CustomTokenObtainPairView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('accounts.urls')),
-    path('api/auth/login/', TokenObtainPairView.as_view()),
+    path('api/auth/login/', CustomTokenObtainPairView.as_view()),
     path('api/auth/refresh/', TokenRefreshView.as_view()),
     path('api/', include('insurance.urls')),
     path('api/', include ('claims.urls')),

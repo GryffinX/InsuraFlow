@@ -17,7 +17,9 @@
 			toast.success('Logged in successfully');
 			goto('/dashboard');
 		} catch (error: any) {
-			toast.error(error.response?.data?.detail || 'Login failed');
+			const errorData = error.response?.data;
+			const message = errorData?.error || errorData?.details?.detail || 'Login failed';
+			toast.error(message);
 		} finally {
 			isLoading = false;
 		}

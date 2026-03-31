@@ -81,7 +81,7 @@
 								</div>
 								<div>
 									<p class="text-sm font-bold text-slate-900">{policy.policy_number}</p>
-									<p class="text-xs text-slate-500">{policy.insurance_type} • {policy.status}</p>
+									<p class="text-xs text-slate-500">{policy.policy_type} • {policy.status}</p>
 								</div>
 							</div>
 							<ChevronRight class="w-5 h-5 text-slate-300" />

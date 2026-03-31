@@ -1,14 +1,25 @@
 from .models import Claim, InspectionReport, Settlement
 from rest_framework import serializers
+from insurance.models import Policy, ServiceProvider, Surveyor
 from insurance.serializers import PolicySerializer, ServiceProviderSerializer, SurveyorSerializer
 
 class ClaimSerializer(serializers.ModelSerializer):
+    policy_id = serializers.PrimaryKeyRelatedField(
+        queryset=Policy.objects.all(), source='policy', write_only=True
+    )
+    service_provider_id = serializers.PrimaryKeyRelatedField(
+        queryset=ServiceProvider.objects.all(), source='service_provider', write_only=True
+    )
+    
     policy = PolicySerializer(read_only=True)
     service_provider = ServiceProviderSerializer(read_only=True)
 
     class Meta:
         model = Claim
-        fields = '__all__'
+        fields = [
+            'id', 'policy', 'policy_id', 'service_provider', 'service_provider_id',
+            'claim_date', 'claim_amount', 'claim_reason', 'status'
+        ]
 
     def validate_claim_amount(self, value):
         if value <= 0:

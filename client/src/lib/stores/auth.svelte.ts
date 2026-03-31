@@ -36,7 +36,15 @@ function createAuthStore() {
     }
 
     async function register(userData: any) {
-        await api.post('/auth/register/', userData);
+        return await api.post('/auth/register/', userData);
+    }
+
+    async function verifyOtp(email: string, otp: string) {
+        await api.post('/auth/verify-otp/', { email, otp });
+    }
+
+    async function resendOtp(email: string) {
+        await api.post('/auth/resend-otp/', { email });
     }
 
     async function logout() {
@@ -51,6 +59,9 @@ function createAuthStore() {
         get user() { return user; },
         get loading() { return loading; },
         login,
+        register,
+        verifyOtp,
+        resendOtp,
         logout
     };
 }

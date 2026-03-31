@@ -9,22 +9,25 @@
 	let email = $state('');
 	let password = $state('');
 	let role = $state('customer');
+	let secretKey = $state('');
 	let isLoading = $state(false);
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
 		isLoading = true;
 		try {
-			await auth.register({ username, email, password, role });
-			toast.success('Account created! Please log in.');
-			goto('/login');
+			await auth.register({ username, email, password, role, secret_key: secretKey });
+			toast.success('Account created! Verification code sent to your email.');
+			goto(`/verify-otp?email=${encodeURIComponent(email)}`);
 		} catch (error: any) {
-			const detail = error.response?.data;
-			if (typeof detail === 'object') {
-				const firstError = Object.values(detail)[0];
+			const errorData = error.response?.data;
+			if (errorData?.details && typeof errorData.details === 'object') {
+				const firstError = Object.values(errorData.details)[0];
 				toast.error(Array.isArray(firstError) ? firstError[0] : 'Registration failed');
+			} else if (errorData?.secret_key) {
+				toast.error(errorData.secret_key[0]);
 			} else {
-				toast.error('Registration failed');
+				toast.error(errorData?.error || 'Registration failed');
 			}
 		} finally {
 			isLoading = false;
@@ -67,19 +70,33 @@
 				bind:value={password}
 			/>
 
-			<div class="space-y-1">
-				<label class="block text-sm font-medium text-slate-700" for="role">
-					I am a...
-				</label>
-				<select
-					id="role"
-					class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none"
-					bind:value={role}
-				>
-					<option value="customer">Customer</option>
-					<option value="agent">Insurance Agent</option>
-					<option value="surveyor">Claims Surveyor</option>
-				</select>
+			<div class="space-y-4">
+				<div class="space-y-1">
+					<label class="block text-sm font-medium text-slate-700" for="role">
+						I am a...
+					</label>
+					<select
+						id="role"
+						class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none"
+						bind:value={role}
+					>
+						<option value="customer">Customer</option>
+						<option value="agent">Insurance Agent</option>
+						<option value="surveyor">Claims Surveyor</option>
+						<option value="admin">Administrator</option>
+					</select>
+				</div>
+
+				{#if role === 'admin' || role === 'surveyor'}
+					<Input
+						label="Registration Secret Key"
+						id="secretKey"
+						type="password"
+						placeholder="Enter secret key provided by organization"
+						required
+						bind:value={secretKey}
+					/>
+				{/if}
 			</div>
 
 			<Button type="submit" class="w-full h-11" loading={isLoading}>

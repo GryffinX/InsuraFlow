@@ -29,7 +29,9 @@
 		switch (status.toLowerCase()) {
 			case 'approved': return { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' };
 			case 'rejected': return { icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' };
-			case 'pending': return { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' };
+			case 'filed': return { icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' };
+			case 'under_review': return { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' };
+			case 'settled': return { icon: CheckCircle2, color: 'text-indigo-600', bg: 'bg-indigo-50' };
 			default: return { icon: FileText, color: 'text-slate-600', bg: 'bg-slate-50' };
 		}
 	}
@@ -41,9 +43,11 @@
 			<h1 class="text-3xl font-bold text-slate-900 tracking-tight">Claims</h1>
 			<p class="text-slate-500 mt-1">Track and manage your insurance claims.</p>
 		</div>
-		<Button>
-			<Plus class="w-5 h-5 mr-2" /> File a Claim
-		</Button>
+		<a href="/claims/new">
+			<Button>
+				<Plus class="w-5 h-5 mr-2" /> File a Claim
+			</Button>
+		</a>
 	</div>
 
 	<!-- Search & Filters -->
@@ -70,7 +74,7 @@
 				<thead>
 					<tr class="bg-slate-50 border-b border-slate-200">
 						<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Claim Details</th>
-						<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Incident Date</th>
+						<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Claim Date</th>
 						<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Amount</th>
 						<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
 						<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Action</th>
@@ -101,19 +105,19 @@
 										</div>
 										<div>
 											<p class="text-sm font-bold text-slate-900">Claim #{claim.id}</p>
-											<p class="text-xs text-slate-500">Policy: {claim.policy_number}</p>
+											<p class="text-xs text-slate-500">Policy: {claim.policy?.policy_number}</p>
 										</div>
 									</div>
 								</td>
 								<td class="px-6 py-4 text-sm text-slate-600">
-									{new Date(claim.incident_date).toLocaleDateString()}
+									{new Date(claim.claim_date).toLocaleDateString()}
 								</td>
 								<td class="px-6 py-4 text-sm font-bold text-slate-900">
-									${claim.claimed_amount}
+									${claim.claim_amount}
 								</td>
 								<td class="px-6 py-4">
 									<span class={"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize " + status.bg + " " + status.color}>
-										{claim.status}
+										{claim.status.replace('_', ' ')}
 									</span>
 								</td>
 								<td class="px-6 py-4 text-right">

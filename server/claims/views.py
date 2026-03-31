@@ -21,7 +21,13 @@ class ClaimViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated(), IsCustomer()]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Claim.objects.none()
+        
         user = self.request.user
+        if not user or not user.is_authenticated:
+            return Claim.objects.none()
+
         if user.role == "admin":
             return Claim.objects.all()
         if user.role == "customer":
@@ -72,7 +78,13 @@ class InspectionReportViewSet(viewsets.ModelViewSet):
     serializer_class = InspectionReportSerializer
     permission_classes = [IsAuthenticated, IsSurveyor]
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return InspectionReport.objects.none()
+
         user = self.request.user
+        if not user or not user.is_authenticated:
+            return InspectionReport.objects.none()
+            
         return InspectionReport.objects.filter(surveyor__email=user.email)
     filterset_fields = ["damage_level"]
     ordering_fields = ["inspection_date"]
@@ -82,6 +94,8 @@ class SettlementViewSet(viewsets.ModelViewSet):
     serializer_class = SettlementSerializer
     permission_classes = [IsAuthenticated, IsAdmin]
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Settlement.objects.none()
         return Settlement.objects.all() 
     filterset_fields = ["payment_status","payment_mode"]
     ordering_fields = ["settlement_date"]
