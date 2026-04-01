@@ -83,7 +83,7 @@
                     <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
                         <h3 class="font-bold text-slate-900 flex items-center gap-2">
                             <Info class="w-5 h-5 text-indigo-500" /> Additional Benefits
-                        </li>
+                        </h3>
                         <ul class="space-y-3">
                             {#each ['24/7 Roadside Assistance', 'Cashless Hospitalization', 'Global Coverage Access'] as feature}
                                 <li class="text-slate-600 text-sm flex items-center gap-2">

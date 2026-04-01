@@ -6,6 +6,11 @@ export interface User {
     username: string;
     email: string;
     role: 'customer' | 'agent' | 'surveyor' | 'provider' | 'admin';
+    is_verified?: boolean;
+    phone?: string;
+    address?: string;
+    dob?: string;
+    formatted_id?: string;
 }
 
 function createAuthStore() {

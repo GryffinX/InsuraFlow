@@ -2,7 +2,7 @@
 	import { api } from '$lib/api/axios';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { onMount } from 'svelte';
-	import { Shield, Search, Filter, ArrowUpDown, Check, Info, ShoppingCart, X, Edit, Trash2, Users } from 'lucide-svelte';
+	import { Shield, Search, Filter, ArrowUpDown, Check, Info, ShoppingCart, X, Edit, Trash2, Users, Plus } from 'lucide-svelte';
 	import { Button } from '$lib/components';
 	import { toast } from 'svelte-sonner';
 
@@ -18,19 +18,31 @@
 	let selectedPolicyCustomers = $state<any[]>([]);
 	let selectedPolicyTitle = $state('');
 
+	let debounceTimer: any;
+	function handleSearch() {
+		clearTimeout(debounceTimer);
+		debounceTimer = setTimeout(() => {
+			fetchPolicies();
+		}, 300);
+	}
+
 	onMount(fetchPolicies);
 
 	async function fetchPolicies() {
 		isLoading = true;
 		try {
-			const params = { 
+			const params: any = { 
 				search: searchQuery,
-				policy_type: selectedType !== 'all' ? selectedType : undefined,
 				ordering: sortBy
 			};
+			if (selectedType !== 'all') {
+				params.policy_type = selectedType;
+			}
 			const res = await api.get('policies/', { params });
 			policies = res.data.results || res.data;
+			console.log("Policies fetched:", policies);
 		} catch (error) {
+			console.error('Failed to load policies', error);
 			toast.error('Failed to load policies');
 		} finally {
 			isLoading = false;
@@ -106,7 +118,7 @@
 				placeholder="Search by title, provider..."
 				class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
 				bind:value={searchQuery}
-				onchange={fetchPolicies}
+				oninput={handleSearch}
 			/>
 		</div>
 		

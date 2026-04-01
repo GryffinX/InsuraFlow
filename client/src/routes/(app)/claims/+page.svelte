@@ -17,14 +17,6 @@
 
 	onMount(async () => {
 		fetchClaims();
-		if (auth.user?.role === 'provider' || auth.user?.role === 'admin') {
-			try {
-				const res = await api.get('surveyors/');
-				surveyors = res.data.results || res.data;
-			} catch (error) {
-				console.error('Failed to load surveyors');
-			}
-		}
 	});
 
 	async function fetchClaims() {
@@ -34,10 +26,22 @@
 				params: { search: searchQuery }
 			});
 			claims = res.data.results || res.data;
+			console.log("Claims fetched:", claims);
 		} catch (error) {
 			toast.error('Failed to load claims');
 		} finally {
 			isLoading = false;
+		}
+	}
+
+	async function fetchSurveyors() {
+		try {
+			const res = await api.get('surveyors/');
+			surveyors = res.data.results || res.data;
+			console.log("Surveyors fetched:", surveyors);
+		} catch (error) {
+			console.error('Failed to load surveyors', error);
+			toast.error('Failed to load surveyors');
 		}
 	}
 
@@ -57,6 +61,7 @@
 
 	function openAssignModal(claimId: number) {
 		selectedClaimId = claimId;
+		fetchSurveyors();
 		showAssignModal = true;
 	}
 
@@ -78,7 +83,7 @@
 			<h1 class="text-3xl font-bold text-slate-900 tracking-tight">Claims</h1>
 			<p class="text-slate-500 mt-1">Track and manage your insurance claims.</p>
 		</div>
-		{#if auth.user?.role === 'customer' || auth.user?.role === 'agent'}
+		{#if auth.user?.role === 'customer'}
 			<a href="/claims/new">
 				<Button>
 					<Plus class="w-5 h-5 mr-2" /> File a Claim
@@ -158,7 +163,7 @@
 									</span>
 								</td>
 								<td class="px-6 py-4 text-right flex justify-end gap-2">
-									{#if (auth.user?.role === 'provider' || auth.user?.role === 'admin') && claim.status === 'filed'}
+									{#if (auth.user?.role === 'provider' || auth.user?.role === 'admin' || auth.user?.role === 'agent') && claim.status === 'filed'}
 										<Button variant="outline" size="sm" onclick={() => openAssignModal(claim.id)}>
 											<UserCheck class="w-4 h-4 mr-1" /> Assign
 										</Button>

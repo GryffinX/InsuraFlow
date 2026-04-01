@@ -105,8 +105,28 @@
 				{role} Portal
 			</span>
 		</div>
-		<h1 class="text-3xl font-bold text-slate-900 tracking-tight">Welcome back, {auth.user?.username}</h1>
-		<p class="text-slate-500 mt-1 text-lg">Here's an overview of your InsuraFlow dashboard.</p>
+		<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+			<div>
+				<h1 class="text-3xl font-bold text-slate-900 tracking-tight">Welcome back, {auth.user?.username}</h1>
+				<p class="text-slate-500 mt-1 text-lg">Here's an overview of your InsuraFlow dashboard.</p>
+			</div>
+			<div class="flex gap-3">
+				{#if role === 'customer'}
+					<a href="/claims/new">
+						<Button>
+							<FileText class="w-5 h-5 mr-2" /> File a Claim
+						</Button>
+					</a>
+				{/if}
+				{#if role === 'provider' || role === 'agent'}
+					<a href="/policies/new">
+						<Button>
+							<Shield class="w-5 h-5 mr-2" /> Create Policy
+						</Button>
+					</a>
+				{/if}
+			</div>
+		</div>
 	</div>
 
 	<!-- Stats Grid -->

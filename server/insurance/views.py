@@ -1,8 +1,9 @@
 from django.db import models
-from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets, status, filters
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 
 from accounts.permissions import IsAdmin, IsAgentOrAdmin, IsProvider, IsCustomer
 from .models import Provider, Agent, Policy, ServiceProvider, Surveyor, UserPolicy
@@ -16,6 +17,10 @@ import random
 
 class PolicyViewSet(viewsets.ModelViewSet):
     serializer_class = PolicySerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'description', 'provider__company_name']
+    filterset_fields = ['policy_type', 'is_active']
+    ordering_fields = ['premium_amount', 'coverage_amount']
     
     def get_queryset(self):
         user = self.request.user
@@ -32,16 +37,18 @@ class PolicyViewSet(viewsets.ModelViewSet):
         return Policy.objects.filter(is_active=True)
 
     def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            # Providers can only edit their own (enforced by queryset usually, but permissions here)
-            # Agents can edit if design allows, adding IsAgentOrAdmin
             return [IsAuthenticated(), IsProvider() | IsAdmin() | IsAgentOrAdmin()]
-        return []
+        return [IsAuthenticated()]
 
     def perform_create(self, serializer):
         user = self.request.user
         if user.role == 'provider':
             serializer.save(provider=user.provider_profile)
+        elif user.role == 'agent':
+            serializer.save(provider=user.agent_profile.provider)
         else:
             serializer.save()
 
@@ -120,8 +127,6 @@ class AgentViewSet(viewsets.ModelViewSet):
             return Agent.objects.filter(provider__user=user)
         return Agent.objects.none()
 
-from rest_framework.permissions import IsAuthenticated, AllowAny
-
 class ServiceProviderViewSet(viewsets.ModelViewSet):
     queryset = ServiceProvider.objects.all()
     serializer_class = ServiceProviderSerializer
@@ -134,4 +139,8 @@ class ServiceProviderViewSet(viewsets.ModelViewSet):
 class SurveyorViewSet(viewsets.ModelViewSet):
     queryset = Surveyor.objects.all()
     serializer_class = SurveyorSerializer
-    permission_classes = [IsAuthenticated, IsAdmin | IsProvider]
+    
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated(), IsAdmin | IsProvider]

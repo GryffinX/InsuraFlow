@@ -94,6 +94,17 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
 
+    def perform_create(self, serializer):
+        password = self.request.data.get('password')
+        user = serializer.save()
+        if password:
+            user.set_password(password)
+            user.save()
+        else:
+            # Default password if none provided
+            user.set_password('Insuraflow@123')
+            user.save()
+
 class PasswordResetRequestView(APIView):
     permission_classes = []
     def post(self, request):
