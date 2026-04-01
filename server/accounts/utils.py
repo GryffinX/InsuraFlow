@@ -17,5 +17,10 @@ def send_otp_email(user):
     email_from = settings.DEFAULT_FROM_EMAIL
     recipient_list = [user.email]
     
-    send_mail(subject, message, email_from, recipient_list)
+    try:
+        send_mail(subject, message, email_from, recipient_list, fail_silently=False)
+    except Exception as e:
+        print(f"ERROR: Failed to send OTP email: {e}")
+        # In development, we can still proceed as the OTP is saved in the database
+    
     return otp_code

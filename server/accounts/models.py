@@ -10,6 +10,7 @@ class User(AbstractUser):
         ('customer','Customer'),
         ('agent','Agent'),
         ('surveyor','Surveyor'),
+        ('provider','Provider'),
         ('admin','Admin'),
     ]
 

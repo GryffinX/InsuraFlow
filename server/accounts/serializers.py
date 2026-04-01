@@ -10,10 +10,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         if not self.user.is_verified:
-             raise serializers.ValidationError({"error": "Email is not verified. Please verify your email first."})
+             raise serializers.ValidationError("Email is not verified. Please verify your email first.")
         return data
 
 class UserSerializer(serializers.ModelSerializer):
+    formatted_id = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
         fields = [
@@ -25,7 +27,18 @@ class UserSerializer(serializers.ModelSerializer):
             'address',
             'dob',
             'is_verified',
+            'formatted_id',
         ]
+
+    def get_formatted_id(self, obj):
+        prefix = {
+            'customer': 'CUST',
+            'agent': 'AGENT',
+            'surveyor': 'SURV',
+            'provider': 'PROV',
+            'admin': 'ADMN'
+        }.get(obj.role, 'USER')
+        return f"{prefix}-{obj.id}"
 
 class RegisterSerializer(serializers.ModelSerializer):
     
@@ -40,6 +53,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             "email",
             "password",
             "role",
+            "phone",
+            "address",
+            "dob",
             "secret_key",
         ]
 
@@ -57,5 +73,18 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('secret_key', None)
         user = User.objects.create_user(**validated_data)
+        
+        # Auto-create corresponding profiles
+        from insurance.models import Provider, Agent, Surveyor
+        try:
+            if user.role == 'provider':
+                Provider.objects.get_or_create(user=user, defaults={'company_name': user.username, 'contact_email': user.email})
+            elif user.role == 'agent':
+                Agent.objects.get_or_create(user=user, defaults={'name': user.username, 'email': user.email})
+            elif user.role == 'surveyor':
+                Surveyor.objects.get_or_create(user=user, defaults={'name': user.username, 'email': user.email, 'license_no': f"LNC-{user.id}"})
+        except Exception as e:
+            print(f"Error creating profile: {e}")
+            
         return user
 

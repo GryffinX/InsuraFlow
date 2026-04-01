@@ -1,24 +1,29 @@
 from .models import Claim, InspectionReport, Settlement
 from rest_framework import serializers
-from insurance.models import Policy, ServiceProvider, Surveyor
-from insurance.serializers import PolicySerializer, ServiceProviderSerializer, SurveyorSerializer
+from insurance.models import UserPolicy, ServiceProvider, Surveyor
+from insurance.serializers import UserPolicySerializer, ServiceProviderSerializer, SurveyorSerializer
 
 class ClaimSerializer(serializers.ModelSerializer):
-    policy_id = serializers.PrimaryKeyRelatedField(
-        queryset=Policy.objects.all(), source='policy', write_only=True
+    user_policy_id = serializers.PrimaryKeyRelatedField(
+        queryset=UserPolicy.objects.all(), source='user_policy', write_only=True
     )
     service_provider_id = serializers.PrimaryKeyRelatedField(
-        queryset=ServiceProvider.objects.all(), source='service_provider', write_only=True
+        queryset=ServiceProvider.objects.all(), source='service_provider', write_only=True, required=False
     )
     
-    policy = PolicySerializer(read_only=True)
+    user_policy = UserPolicySerializer(read_only=True)
     service_provider = ServiceProviderSerializer(read_only=True)
+    assigned_surveyor = SurveyorSerializer(read_only=True)
+    assigned_surveyor_id = serializers.PrimaryKeyRelatedField(
+        queryset=Surveyor.objects.all(), source='assigned_surveyor', write_only=True, required=False
+    )
 
     class Meta:
         model = Claim
         fields = [
-            'id', 'policy', 'policy_id', 'service_provider', 'service_provider_id',
-            'claim_date', 'claim_amount', 'claim_reason', 'status'
+            'id', 'user_policy', 'user_policy_id', 'service_provider', 'service_provider_id',
+            'assigned_surveyor', 'assigned_surveyor_id',
+            'claim_date', 'claim_amount', 'claim_reason', 'status', 'documents'
         ]
 
     def validate_claim_amount(self, value):
@@ -27,6 +32,7 @@ class ClaimSerializer(serializers.ModelSerializer):
         return value
 
 class InspectionReportSerializer(serializers.ModelSerializer):
+    surveyor = SurveyorSerializer(read_only=True)
     class Meta:
         model = InspectionReport
         fields = '__all__'
@@ -45,6 +51,7 @@ class SettlementSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
+        # Handle both create (with claim_id mapped to claim) and update
         claim = data.get('claim')
         approved_amount = data.get('approved_amount')
 

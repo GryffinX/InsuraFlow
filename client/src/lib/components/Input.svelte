@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
-	import type { HTMLAttributes } from 'svelte/elements';
+	import type { HTMLInputAttributes } from 'svelte/elements';
 
-	interface Props extends HTMLAttributes<HTMLInputElement> {
+	interface Props extends HTMLInputAttributes {
 		label?: string;
 		error?: string;
-        type?: string;
         value?: string | number;
 	}
 

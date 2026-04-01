@@ -62,9 +62,8 @@
 				label="Verification Code"
 				id="otp"
 				placeholder="123456"
-				maxlength="6"
-				required
-				bind:value={otp}
+				maxlength={6}
+				required				bind:value={otp}
 			/>
 
 			<Button type="submit" class="w-full h-11" loading={isLoading}>

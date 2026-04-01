@@ -1,19 +1,20 @@
 <script lang="ts">
     import { api } from '$lib/api/axios';
+    import { auth } from '$lib/stores/auth.svelte';
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { Button, Input } from '$lib/components';
     import { toast } from 'svelte-sonner';
     import { Shield, ArrowLeft } from 'lucide-svelte';
 
-    let insurers = $state([]);
-    let agents = $state([]);
-    let users = $state([]);
+    let providers = $state<any[]>([]);
+    let agents = $state<any[]>([]);
+    let users = $state<any[]>([]);
     
     let formData = $state({
         policy_number: '',
         policy_holder_id: '',
-        insurer_id: '',
+        provider_id: '',
         agent_id: '',
         policy_type: 'health',
         coverage_amount: '',
@@ -28,11 +29,11 @@
             formData.policy_holder_id = auth.user.id.toString();
         }
         try {
-            const [insurersRes, agentsRes] = await Promise.all([
-                api.get('/insurers/'),
-                api.get('/agents/')
+            const [providersRes, agentsRes] = await Promise.all([
+                api.get('providers/'),
+                api.get('agents/')
             ]);
-            insurers = insurersRes.data.results || insurersRes.data;
+            providers = providersRes.data.results || providersRes.data;
             agents = agentsRes.data.results || agentsRes.data;
         } catch (error) {
             console.error('Failed to fetch initial data', error);
@@ -43,7 +44,7 @@
         e.preventDefault();
         isLoading = true;
         try {
-            await api.post('/policies/', formData);
+            await api.post('policies/', formData);
             toast.success('Policy created successfully');
             goto('/policies');
         } catch (error: any) {
@@ -90,18 +91,18 @@
             </div>
 
             <div class="space-y-1">
-                <label class="block text-sm font-medium text-slate-700" for="insurer">
-                    Insurer
+                <label class="block text-sm font-medium text-slate-700" for="provider">
+                    Provider
                 </label>
                 <select
-                    id="insurer"
+                    id="provider"
                     class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none"
-                    bind:value={formData.insurer_id}
+                    bind:value={formData.provider_id}
                     required
                 >
-                    <option value="">Select Insurer</option>
-                    {#each insurers as insurer}
-                        <option value={insurer.id}>{insurer.company_name}</option>
+                    <option value="">Select Provider</option>
+                    {#each providers as provider}
+                        <option value={provider.id}>{provider.company_name}</option>
                     {/each}
                 </select>
             </div>

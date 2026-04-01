@@ -5,7 +5,7 @@ export interface User {
     id: number;
     username: string;
     email: string;
-    role: 'customer' | 'agent' | 'surveyor' | 'admin';
+    role: 'customer' | 'agent' | 'surveyor' | 'provider' | 'admin';
 }
 
 function createAuthStore() {
@@ -21,14 +21,14 @@ function createAuthStore() {
     }
 
     async function login(credentials: any) {
-        const response = await api.post('/auth/login/', credentials);
+        const response = await api.post('auth/login/', credentials);
         const { access, refresh } = response.data;
         
         localStorage.setItem('access_token', access);
         localStorage.setItem('refresh_token', refresh);
         
         // Fetch user info
-        const userResponse = await api.get('/auth/me/');
+        const userResponse = await api.get('auth/me/');
         const userData = userResponse.data;
         
         localStorage.setItem('user', JSON.stringify(userData));
@@ -36,15 +36,15 @@ function createAuthStore() {
     }
 
     async function register(userData: any) {
-        return await api.post('/auth/register/', userData);
+        return await api.post('auth/register/', userData);
     }
 
     async function verifyOtp(email: string, otp: string) {
-        await api.post('/auth/verify-otp/', { email, otp });
+        await api.post('auth/verify-otp/', { email, otp });
     }
 
     async function resendOtp(email: string) {
-        await api.post('/auth/resend-otp/', { email });
+        await api.post('auth/resend-otp/', { email });
     }
 
     async function logout() {

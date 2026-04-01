@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
-	import type { HTMLAttributes } from 'svelte/elements';
+	import type { HTMLButtonAttributes } from 'svelte/elements';
 
-	interface Props extends HTMLAttributes<HTMLButtonElement> {
+	interface Props extends HTMLButtonAttributes {
 		variant?: 'primary' | 'secondary' | 'ghost' | 'outline' | 'danger';
 		size?: 'sm' | 'md' | 'lg' | 'icon';
 		loading?: boolean;
@@ -14,6 +14,7 @@
 		size = 'md', 
 		loading = false,
 		children,
+		disabled,
 		...props 
 	}: Props = $props();
 
@@ -40,7 +41,7 @@
 		sizes[size],
 		className
 	)}
-	disabled={loading}
+	disabled={disabled || loading}
 	{...props}
 >
 	{#if loading}

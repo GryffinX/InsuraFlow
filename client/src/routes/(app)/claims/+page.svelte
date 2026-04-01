@@ -1,20 +1,36 @@
 <script lang="ts">
 	import { api } from '$lib/api/axios';
+	import { auth } from '$lib/stores/auth.svelte';
 	import { onMount } from 'svelte';
-	import { FileText, Plus, Search, Filter, AlertCircle, Clock, CheckCircle2 } from 'lucide-svelte';
+	import { FileText, Plus, Search, Filter, AlertCircle, Clock, CheckCircle2, UserCheck, X } from 'lucide-svelte';
 	import { Button } from '$lib/components';
 	import { toast } from 'svelte-sonner';
 
-	let claims = $state([]);
+	let claims = $state<any[]>([]);
 	let isLoading = $state(true);
 	let searchQuery = $state('');
+	
+	let surveyors = $state<any[]>([]);
+	let showAssignModal = $state(false);
+	let selectedClaimId = $state<number | null>(null);
+	let selectedSurveyorId = $state('');
 
-	onMount(fetchClaims);
+	onMount(async () => {
+		fetchClaims();
+		if (auth.user?.role === 'provider' || auth.user?.role === 'admin') {
+			try {
+				const res = await api.get('surveyors/');
+				surveyors = res.data.results || res.data;
+			} catch (error) {
+				console.error('Failed to load surveyors');
+			}
+		}
+	});
 
 	async function fetchClaims() {
 		isLoading = true;
 		try {
-			const res = await api.get('/claims/', {
+			const res = await api.get('claims/', {
 				params: { search: searchQuery }
 			});
 			claims = res.data.results || res.data;
@@ -23,6 +39,25 @@
 		} finally {
 			isLoading = false;
 		}
+	}
+
+	async function assignSurveyor() {
+		if (!selectedClaimId || !selectedSurveyorId) return;
+		try {
+			await api.post(`claims/${selectedClaimId}/assign_surveyor/`, {
+				surveyor_id: selectedSurveyorId
+			});
+			toast.success('Surveyor assigned successfully');
+			showAssignModal = false;
+			fetchClaims();
+		} catch (error: any) {
+			toast.error(error.response?.data?.error || 'Failed to assign surveyor');
+		}
+	}
+
+	function openAssignModal(claimId: number) {
+		selectedClaimId = claimId;
+		showAssignModal = true;
 	}
 
 	function getStatusIcon(status: string) {
@@ -43,11 +78,13 @@
 			<h1 class="text-3xl font-bold text-slate-900 tracking-tight">Claims</h1>
 			<p class="text-slate-500 mt-1">Track and manage your insurance claims.</p>
 		</div>
-		<a href="/claims/new">
-			<Button>
-				<Plus class="w-5 h-5 mr-2" /> File a Claim
-			</Button>
-		</a>
+		{#if auth.user?.role === 'customer' || auth.user?.role === 'agent'}
+			<a href="/claims/new">
+				<Button>
+					<Plus class="w-5 h-5 mr-2" /> File a Claim
+				</Button>
+			</a>
+		{/if}
 	</div>
 
 	<!-- Search & Filters -->
@@ -105,7 +142,7 @@
 										</div>
 										<div>
 											<p class="text-sm font-bold text-slate-900">Claim #{claim.id}</p>
-											<p class="text-xs text-slate-500">Policy: {claim.policy?.policy_number}</p>
+											<p class="text-xs text-slate-500">Policy: {claim.user_policy?.policy_number || 'N/A'}</p>
 										</div>
 									</div>
 								</td>
@@ -120,8 +157,15 @@
 										{claim.status.replace('_', ' ')}
 									</span>
 								</td>
-								<td class="px-6 py-4 text-right">
-									<Button variant="ghost" size="sm">View Details</Button>
+								<td class="px-6 py-4 text-right flex justify-end gap-2">
+									{#if (auth.user?.role === 'provider' || auth.user?.role === 'admin') && claim.status === 'filed'}
+										<Button variant="outline" size="sm" onclick={() => openAssignModal(claim.id)}>
+											<UserCheck class="w-4 h-4 mr-1" /> Assign
+										</Button>
+									{/if}
+									<a href={`/claims/${claim.id}`}>
+										<Button variant="ghost" size="sm">View Details</Button>
+									</a>
 								</td>
 							</tr>
 						{/each}
@@ -131,3 +175,41 @@
 		</div>
 	</div>
 </div>
+
+{#if showAssignModal}
+	<div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+		<div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col">
+			<div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+				<h2 class="text-xl font-bold text-slate-900">Assign Surveyor</h2>
+				<button onclick={() => showAssignModal = false} class="p-2 hover:bg-slate-200 rounded-full transition-colors">
+					<X class="w-6 h-6" />
+				</button>
+			</div>
+			
+			<div class="p-6 space-y-4">
+				<p class="text-sm text-slate-500">Select a surveyor to review Claim #{selectedClaimId}.</p>
+				
+				<div class="space-y-2">
+					<label class="block text-sm font-bold text-slate-700 uppercase tracking-wider" for="surveyor">
+						Surveyor
+					</label>
+					<select
+						id="surveyor"
+						class="block w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+						bind:value={selectedSurveyorId}
+					>
+						<option value="">Choose a surveyor</option>
+						{#each surveyors as s}
+							<option value={s.id}>{s.name} ({s.region})</option>
+						{/each}
+					</select>
+				</div>
+			</div>
+			
+			<div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+				<Button variant="ghost" onclick={() => showAssignModal = false}>Cancel</Button>
+				<Button onclick={assignSurveyor} disabled={!selectedSurveyorId}>Confirm Assignment</Button>
+			</div>
+		</div>
+	</div>
+{/if}

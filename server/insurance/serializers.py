@@ -1,58 +1,64 @@
 from django.contrib.auth import get_user_model
-from .models import Insurer, Agent, ServiceProvider, Surveyor, Policy
+from .models import Provider, Agent, ServiceProvider, Surveyor, Policy, UserPolicy
 from rest_framework import serializers
 
 User = get_user_model()
 
-class InsurerSerializer(serializers.ModelSerializer):
+class ProviderSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Insurer
+        model = Provider
         fields = '__all__'
 
 class AgentSerializer(serializers.ModelSerializer):
+    provider = ProviderSerializer(read_only=True)
+    provider_id = serializers.PrimaryKeyRelatedField(
+        queryset=Provider.objects.all(), source='provider', write_only=True, required=False
+    )
     class Meta:
         model = Agent
+        fields = '__all__'
+
+class SurveyorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Surveyor
         fields = '__all__'
 
 class ServiceProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceProvider
         fields = '__all__'
-        
+
 class PolicySerializer(serializers.ModelSerializer):
-    insurer_id = serializers.PrimaryKeyRelatedField(
-        queryset=Insurer.objects.all(), source='insurer', write_only=True
+    provider = ProviderSerializer(read_only=True)
+    provider_id = serializers.PrimaryKeyRelatedField(
+        queryset=Provider.objects.all(), source='provider', write_only=True, required=False, allow_null=True
     )
-    agent_id = serializers.PrimaryKeyRelatedField(
-        queryset=Agent.objects.all(), source='agent', write_only=True
-    )
-    policy_holder_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), source='policy_holder', write_only=True, required=False
-    )
-    
-    insurer = InsurerSerializer(read_only=True)
-    agent = AgentSerializer(read_only=True)
-    
+    is_owned = serializers.SerializerMethodField()
+
     class Meta:
         model = Policy
         fields = [
-            'id', 'policy_number', 'policy_holder', 'policy_holder_id', 
-            'insurer', 'insurer_id', 'agent', 'agent_id', 
-            'policy_type', 'coverage_amount', 'premium_amount', 
-            'start_date', 'end_date', 'status'
+            'id', 'title', 'description', 'policy_type', 
+            'coverage_amount', 'premium_amount', 
+            'provider', 'provider_id', 'is_active', 'is_owned'
         ]
 
-    def validate_coverage_amount(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("Coverage amount must be greater than zero.")
-        return value
+    def get_is_owned(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return UserPolicy.objects.filter(user=request.user, policy=obj).exists()
+        return False
 
-    def validate_premium_amount(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("Premium amount must be greater than zero.")
-        return value
-
-class SurveyorSerializer(serializers.ModelSerializer):
+class UserPolicySerializer(serializers.ModelSerializer):
+    policy = PolicySerializer(read_only=True)
+    policy_id = serializers.PrimaryKeyRelatedField(
+        queryset=Policy.objects.all(), source='policy', write_only=True
+    )
+    agent = AgentSerializer(read_only=True)
+    agent_id = serializers.PrimaryKeyRelatedField(
+        queryset=Agent.objects.all(), source='agent', write_only=True, required=False, allow_null=True
+    )
+    
     class Meta:
-        model = Surveyor
+        model = UserPolicy
         fields = '__all__'

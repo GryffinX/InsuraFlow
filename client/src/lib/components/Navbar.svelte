@@ -7,11 +7,13 @@
 
 	let isOpen = $state(false);
 
-	const navLinks = [
+	const navLinks = $derived([
 		{ href: '/dashboard', label: 'Dashboard' },
 		{ href: '/policies', label: 'Policies' },
 		{ href: '/claims', label: 'Claims' },
-	];
+        ...(auth.user?.role === 'admin' ? [{ href: '/users', label: 'Users' }] : []),
+        ...(auth.user ? [{ href: '/profile', label: 'Profile' }] : []),
+	]);
 </script>
 
 <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">

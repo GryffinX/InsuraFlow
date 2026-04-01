@@ -1,12 +1,17 @@
 from rest_framework.routers import DefaultRouter
-from .views import InsurerViewSet, AgentViewSet, SurveyorViewSet, ServiceProviderViewSet, PolicyViewSet
+from .views import (
+    ProviderViewSet, AgentViewSet, SurveyorViewSet, 
+    ServiceProviderViewSet, PolicyViewSet,
+    UserPolicyViewSet
+)
 
 router = DefaultRouter()
 
-router.register(r'insurers', InsurerViewSet)
-router.register(r'agents', AgentViewSet)
-router.register(r'surveyors', SurveyorViewSet)
-router.register(r'providers', ServiceProviderViewSet)
+router.register(r'providers', ProviderViewSet, basename='provider')
+router.register(r'agents', AgentViewSet, basename='agent')
+router.register(r'surveyors', SurveyorViewSet, basename='surveyor')
+router.register(r'service-providers', ServiceProviderViewSet, basename='service-provider')
 router.register(r'policies', PolicyViewSet, basename='policy')
+router.register(r'user-policies', UserPolicyViewSet, basename='user-policy')
 
 urlpatterns = router.urls

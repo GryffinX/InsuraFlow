@@ -4,17 +4,16 @@
     import { goto } from '$app/navigation';
     import { Button, Input } from '$lib/components';
     import { toast } from 'svelte-sonner';
-    import { FileText, ArrowLeft } from 'lucide-svelte';
+    import { FileText, ArrowLeft, Shield } from 'lucide-svelte';
 
-    let policies = $state([]);
-    let providers = $state([]);
+    let userPolicies = $state<any[]>([]);
+    let serviceProviders = $state<any[]>([]);
     
     let formData = $state({
-        policy_id: '',
+        user_policy_id: '',
         service_provider_id: '',
         claim_amount: '',
         claim_reason: '',
-        status: 'filed'
     });
 
     let isLoading = $state(false);
@@ -22,23 +21,28 @@
     onMount(async () => {
         try {
             const [policiesRes, providersRes] = await Promise.all([
-                api.get('/policies/'),
-                api.get('/providers/')
+                api.get('user-policies/'),
+                api.get('service-providers/')
             ]);
-            policies = policiesRes.data.results || policiesRes.data;
-            providers = providersRes.data.results || providersRes.data;
-        } catch (error) {
-            console.error('Failed to fetch initial data', error);
+            const rawPolicies = policiesRes.data.results || policiesRes.data;
+            userPolicies = rawPolicies.filter((p: any) => p.status === 'active');
+            serviceProviders = providersRes.data.results || providersRes.data;
+        } catch (error: any) {
+            const msg = error.response?.data?.error || 'Failed to load required data';
+            toast.error(msg);
+            console.error('Fetch error:', error);
         }
     });
 
     async function handleSubmit(e: Event) {
         e.preventDefault();
+        if (!formData.user_policy_id) return toast.error('Please select a policy');
+        
         isLoading = true;
         try {
-            await api.post('/claims/', formData);
+            await api.post('claims/', formData);
             toast.success('Claim filed successfully');
-            goto('/claims');
+            goto('/dashboard');
         } catch (error: any) {
             toast.error(error.response?.data?.error || 'Failed to file claim');
         } finally {
@@ -49,82 +53,98 @@
 
 <div class="max-w-3xl mx-auto px-4 py-8">
     <div class="mb-8 flex items-center gap-4">
-        <a href="/claims" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+        <a href="/dashboard" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
             <ArrowLeft class="w-6 h-6 text-slate-600" />
         </a>
         <div>
-            <h1 class="text-3xl font-bold text-slate-900">File New Claim</h1>
-            <p class="text-slate-500">Enter details to file a new insurance claim.</p>
+            <h1 class="text-3xl font-bold text-slate-900 tracking-tight">File New Claim</h1>
+            <p class="text-slate-500 mt-1">Submit a request for reimbursement or direct payment.</p>
         </div>
     </div>
 
-    <form onsubmit={handleSubmit} class="bg-white rounded-2xl border border-slate-200 shadow-xl p-8 space-y-6">
-        <div class="space-y-6">
-            <div class="space-y-1">
-                <label class="block text-sm font-medium text-slate-700" for="policy">
-                    Policy
-                </label>
-                <select
-                    id="policy"
-                    class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none"
-                    bind:value={formData.policy_id}
-                    required
-                >
-                    <option value="">Select Policy</option>
-                    {#each policies as policy}
-                        <option value={policy.id}>{policy.policy_number} ({policy.policy_type})</option>
-                    {/each}
-                </select>
+    {#if userPolicies.length === 0 && !isLoading}
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center">
+            <Shield class="w-12 h-12 text-amber-500 mx-auto mb-4" />
+            <h3 class="text-lg font-bold text-amber-900">No Active Policies Found</h3>
+            <p class="text-amber-700 mt-1 mb-6">You need an active policy to file a claim.</p>
+            <a href="/policies">
+                <Button>Browse Policies</Button>
+            </a>
+        </div>
+    {:else}
+        <form onsubmit={handleSubmit} class="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden p-8 space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-2">
+                    <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider" for="policy">
+                        Select Policy
+                    </label>
+                    <select
+                        id="policy"
+                        class="block w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                        bind:value={formData.user_policy_id}
+                        required
+                    >
+                        <option value="">Choose your policy</option>
+                        {#each userPolicies as up}
+                            <option value={up.id}>{up.policy?.title || 'Unknown Policy'} ({up.policy_number})</option>
+                        {/each}
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider" for="provider">
+                        Service Provider
+                    </label>
+                    <select
+                        id="provider"
+                        class="block w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                        bind:value={formData.service_provider_id}
+                    >
+                        <option value="">Select Hospital/Garage (Optional)</option>
+                        {#each serviceProviders as sp}
+                            <option value={sp.id}>{sp.name} - {sp.city}</option>
+                        {/each}
+                    </select>
+                </div>
             </div>
 
-            <div class="space-y-1">
-                <label class="block text-sm font-medium text-slate-700" for="provider">
-                    Service Provider (Hospital/Garage)
+            <div class="space-y-2">
+                <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider" for="claim_amount">
+                    Claim Amount ($)
                 </label>
-                <select
-                    id="provider"
-                    class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none"
-                    bind:value={formData.service_provider_id}
+                <input
+                    id="claim_amount"
+                    type="number"
+                    step="0.01"
+                    placeholder="Enter estimated loss or expense"
+                    class="block w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                    bind:value={formData.claim_amount}
                     required
-                >
-                    <option value="">Select Provider</option>
-                    {#each providers as provider}
-                        <option value={provider.id}>{provider.name} ({provider.provider_type})</option>
-                    {/each}
-                </select>
+                />
             </div>
 
-            <Input
-                label="Claim Amount"
-                type="number"
-                id="claim_amount"
-                placeholder="5000"
-                required
-                bind:value={formData.claim_amount}
-            />
-
-            <div class="space-y-1">
-                <label class="block text-sm font-medium text-slate-700" for="reason">
+            <div class="space-y-2">
+                <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider" for="reason">
                     Reason for Claim
                 </label>
                 <textarea
                     id="reason"
                     rows="4"
-                    class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none"
-                    placeholder="Describe the incident..."
+                    class="block w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                    placeholder="Describe exactly what happened..."
                     bind:value={formData.claim_reason}
                     required
                 ></textarea>
             </div>
-        </div>
 
-        <div class="pt-4 border-t border-slate-100 flex justify-end gap-4">
-            <a href="/claims">
-                <Button variant="outline" type="button">Cancel</Button>
-            </a>
-            <Button type="submit" loading={isLoading}>
-                File Claim
-            </Button>
-        </div>
-    </form>
+            <div class="pt-6 border-t border-slate-100 flex justify-end gap-4">
+                <a href="/dashboard">
+                    <Button variant="ghost" type="button">Cancel</Button>
+                </a>
+                <Button type="submit" loading={isLoading} class="px-8">
+                    File Claim
+                </Button>
+            </div>
+        </form>
+    {/if}
 </div>

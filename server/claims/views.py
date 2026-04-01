@@ -3,99 +3,105 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from accounts.permissions import IsCustomer, IsSurveyor, IsAdmin
+from accounts.permissions import IsCustomer, IsSurveyor, IsAdmin, IsProvider, IsAgent
 from .models import Claim, InspectionReport, Settlement
 from .serializers import ClaimSerializer, InspectionReportSerializer, SettlementSerializer
-from . import services
 
 # Create your views here.
 
 class ClaimViewSet(viewsets.ModelViewSet):
     serializer_class = ClaimSerializer
-
-    def get_permissions(self):
-        if self.action in ["approve", "reject", "settle"]:
-            return [IsAuthenticated(), IsAdmin()]
-        if self.action in ["list", "retrieve", "my_claims"]:
-            return [IsAuthenticated()]
-        return [IsAuthenticated(), IsCustomer()]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        if getattr(self, "swagger_fake_view", False):
-            return Claim.objects.none()
-        
         user = self.request.user
-        if not user or not user.is_authenticated:
-            return Claim.objects.none()
-
         if user.role == "admin":
             return Claim.objects.all()
         if user.role == "customer":
-            return Claim.objects.filter(policy__policy_holder=user)
+            return Claim.objects.filter(user=user)
+        if user.role == "provider":
+            return Claim.objects.filter(user_policy__policy__provider__user=user)
         if user.role == "agent":
-            return Claim.objects.filter(policy__agent__email=user.email)
+            return Claim.objects.filter(user_policy__agent__user=user)
         if user.role == "surveyor":
-            return Claim.objects.all()
+            return Claim.objects.filter(assigned_surveyor__user=user)
         return Claim.objects.none()
 
-    @action(detail=False, methods=["get"])
-    def my_claims(self, request):
-        user = request.user
-        claims = Claim.objects.filter(policy__policy_holder=user)
-        serializer = self.get_serializer(claims, many=True)
-        return Response(serializer.data)
+    def perform_create(self, serializer):
+        user_policy = serializer.validated_data.get('user_policy')
+        request_user = self.request.user
+        
+        # If agent or admin, allow filing on behalf of the customer
+        if request_user.role in ['agent', 'admin']:
+            user = user_policy.user
+        else:
+            if user_policy.user != request_user:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("You can only file a claim for a policy you own.")
+            user = request_user
+            
+        serializer.save(user=user)
 
-    @action(detail=True, methods=["post"])
-    def submit(self, request, pk=None):
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated, IsAdmin | IsProvider | IsAgent])
+    def assign_surveyor(self, request, pk=None):
         claim = self.get_object()
-        services.submit_claim(claim)
-        return Response({"message": "Claim submitted for review"})
+        surveyor_id = request.data.get('surveyor_id')
+        if not surveyor_id:
+            return Response({"error": "surveyor_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        claim.assigned_surveyor_id = surveyor_id
+        claim.status = 'under_review'
+        claim.save()
+        return Response({"message": "Surveyor assigned successfully"})
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def approve(self, request, pk=None):
         claim = self.get_object()
-        services.approve_claim(claim)
+        if request.user.role == 'surveyor' and (not claim.assigned_surveyor or claim.assigned_surveyor.user != request.user):
+            return Response({"error": "Not assigned to this claim"}, status=status.HTTP_403_FORBIDDEN)
+        if request.user.role not in ['admin', 'surveyor']:
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+            
+        claim.status = 'approved'
+        claim.save()
         return Response({"message": "Claim approved"})
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def reject(self, request, pk=None):
         claim = self.get_object()
-        services.reject_claim(claim)
+        if request.user.role == 'surveyor' and (not claim.assigned_surveyor or claim.assigned_surveyor.user != request.user):
+            return Response({"error": "Not assigned to this claim"}, status=status.HTTP_403_FORBIDDEN)
+        if request.user.role not in ['admin', 'surveyor']:
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+
+        claim.status = 'rejected'
+        claim.save()
         return Response({"message": "Claim rejected"})
-
-    @action(detail=True, methods=["post"])
-    def settle(self, request, pk=None):
-        claim = self.get_object()
-        services.settle_claim(claim)
-        return Response({"message": "Claim settled"})
-
-    
-    filterset_fields = ["status"]
-    search_fields = ["claim_reason"]
-    ordering_fields = ["claim_date","claim_amount"]
 
 class InspectionReportViewSet(viewsets.ModelViewSet):
     serializer_class = InspectionReportSerializer
-    permission_classes = [IsAuthenticated, IsSurveyor]
+    permission_classes = [IsAuthenticated, IsSurveyor | IsAdmin]
+
     def get_queryset(self):
-        if getattr(self, "swagger_fake_view", False):
-            return InspectionReport.objects.none()
-
         user = self.request.user
-        if not user or not user.is_authenticated:
-            return InspectionReport.objects.none()
-            
-        return InspectionReport.objects.filter(surveyor__email=user.email)
-    filterset_fields = ["damage_level"]
-    ordering_fields = ["inspection_date"]
+        if user.role == 'admin':
+            return InspectionReport.objects.all()
+        return InspectionReport.objects.filter(surveyor__user=user)
 
+    def perform_create(self, serializer):
+        from insurance.models import Surveyor
+        surveyor = Surveyor.objects.get(user=self.request.user)
+        serializer.save(surveyor=surveyor)
 
 class SettlementViewSet(viewsets.ModelViewSet):
     serializer_class = SettlementSerializer
     permission_classes = [IsAuthenticated, IsAdmin]
+
     def get_queryset(self):
-        if getattr(self, "swagger_fake_view", False):
-            return Settlement.objects.none()
-        return Settlement.objects.all() 
-    filterset_fields = ["payment_status","payment_mode"]
-    ordering_fields = ["settlement_date"]
+        return Settlement.objects.all()
+
+    def perform_create(self, serializer):
+        settlement = serializer.save()
+        claim = settlement.claim
+        claim.status = 'settled'
+        claim.save()
