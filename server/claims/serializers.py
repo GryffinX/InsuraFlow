@@ -26,6 +26,18 @@ class ClaimSerializer(serializers.ModelSerializer):
             'claim_date', 'claim_amount', 'claim_reason', 'status', 'documents'
         ]
 
+    def validate(self, attrs):
+        user_policy = attrs.get('user_policy')
+        if user_policy and user_policy.status != 'active':
+            raise serializers.ValidationError({"user_policy": "You can only file a claim for an active policy."})
+        
+        # Check if user owns the policy (if not agent/admin)
+        request = self.context.get('request')
+        if request and request.user.role == 'customer' and user_policy.user != request.user:
+            raise serializers.ValidationError({"user_policy": "You do not own this policy."})
+            
+        return attrs
+
     def validate_claim_amount(self, value):
         if value <= 0:
             raise serializers.ValidationError("Claim amount must be greater than zero.")

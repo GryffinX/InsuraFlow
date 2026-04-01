@@ -5,7 +5,7 @@
     import { onMount } from 'svelte';
     import { Button } from '$lib/components';
     import { toast } from 'svelte-sonner';
-    import { Shield, Check, ShoppingCart, ArrowLeft, Building, Calendar, DollarSign } from 'lucide-svelte';
+    import { Shield, Check, ShoppingCart, ArrowLeft, Building, Calendar, DollarSign, Info } from 'lucide-svelte';
 
     const id = page.params.id;
     let policy = $state<any>(null);

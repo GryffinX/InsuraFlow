@@ -19,9 +19,11 @@ class AgentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class SurveyorSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
     class Meta:
         model = Surveyor
-        fields = '__all__'
+        fields = ['id', 'name', 'license_no', 'region', 'phone', 'email', 'username']
 
 class ServiceProviderSerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,6 +51,11 @@ class PolicySerializer(serializers.ModelSerializer):
             return UserPolicy.objects.filter(user=request.user, policy=obj).exists()
         return False
 
+class UserSerializerSimple(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email']
+
 class UserPolicySerializer(serializers.ModelSerializer):
     policy = PolicySerializer(read_only=True)
     policy_id = serializers.PrimaryKeyRelatedField(
@@ -58,6 +65,7 @@ class UserPolicySerializer(serializers.ModelSerializer):
     agent_id = serializers.PrimaryKeyRelatedField(
         queryset=Agent.objects.all(), source='agent', write_only=True, required=False, allow_null=True
     )
+    user = UserSerializerSimple(read_only=True)
     
     class Meta:
         model = UserPolicy

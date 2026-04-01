@@ -48,9 +48,16 @@ class PolicyViewSet(viewsets.ModelViewSet):
         if user.role == 'provider':
             serializer.save(provider=user.provider_profile)
         elif user.role == 'agent':
-            serializer.save(provider=user.agent_profile.provider)
-        else:
+            if user.agent_profile.provider:
+                serializer.save(provider=user.agent_profile.provider)
+            else:
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({"detail": "Agent is not assigned to any provider."})
+        elif user.role == 'admin':
             serializer.save()
+        else:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Only providers, agents, or admins can create policies.")
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated, IsProvider | IsAdmin])
     def customers(self, request, pk=None):

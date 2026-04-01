@@ -75,6 +75,9 @@ class UserPolicy(models.Model):
 
     agent = models.ForeignKey(Agent, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_policies')
 
+    class Meta:
+        unique_together = ('user', 'policy')
+
     def __str__(self):
         return f"{self.user.email if self.user else 'No User'} - {self.policy_number}"
 

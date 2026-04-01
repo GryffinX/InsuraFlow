@@ -4,7 +4,7 @@
     import { goto } from '$app/navigation';
     import { Button, Input } from '$lib/components';
     import { toast } from 'svelte-sonner';
-    import { FileText, ArrowLeft, Shield } from 'lucide-svelte';
+    import { FileText, ArrowLeft, Shield, Building, Tag } from 'lucide-svelte';
 
     let userPolicies = $state<any[]>([]);
     let serviceProviders = $state<any[]>([]);
@@ -17,6 +17,10 @@
     });
 
     let isLoading = $state(false);
+
+    const selectedPolicy = $derived(
+        userPolicies.find(p => p.id.toString() === formData.user_policy_id.toString())
+    );
 
     onMount(async () => {
         try {
@@ -44,7 +48,7 @@
             toast.success('Claim filed successfully');
             goto('/dashboard');
         } catch (error: any) {
-            toast.error(error.response?.data?.error || 'Failed to file claim');
+            toast.error(error.response?.data?.error || error.response?.data?.detail || 'Failed to file claim');
         } finally {
             isLoading = false;
         }
@@ -73,10 +77,10 @@
         </div>
     {:else}
         <form onsubmit={handleSubmit} class="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden p-8 space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-6">
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider" for="policy">
-                        Select Policy
+                        Select Your Policy
                     </label>
                     <select
                         id="policy"
@@ -84,11 +88,47 @@
                         bind:value={formData.user_policy_id}
                         required
                     >
-                        <option value="">Choose your policy</option>
+                        <option value="">Choose a policy</option>
                         {#each userPolicies as up}
                             <option value={up.id}>{up.policy?.title || 'Unknown Policy'} ({up.policy_number})</option>
                         {/each}
                     </select>
+                </div>
+
+                {#if selectedPolicy}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                        <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex items-center gap-3">
+                            <Building class="w-5 h-5 text-indigo-600" />
+                            <div>
+                                <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Provider</p>
+                                <p class="font-bold text-indigo-900">{selectedPolicy.policy?.provider?.company_name || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center gap-3">
+                            <Tag class="w-5 h-5 text-slate-600" />
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Policy Type</p>
+                                <p class="font-bold text-slate-900 capitalize">{selectedPolicy.policy?.policy_type || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                {/if}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-2">
+                    <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider" for="claim_amount">
+                        Claim Amount ($)
+                    </label>
+                    <input
+                        id="claim_amount"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        class="block w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                        bind:value={formData.claim_amount}
+                        required
+                    />
                 </div>
 
                 <div class="space-y-2">
@@ -100,27 +140,12 @@
                         class="block w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
                         bind:value={formData.service_provider_id}
                     >
-                        <option value="">Select Hospital/Garage (Optional)</option>
+                        <option value="">Select Hospital/Garage</option>
                         {#each serviceProviders as sp}
                             <option value={sp.id}>{sp.name} - {sp.city}</option>
                         {/each}
                     </select>
                 </div>
-            </div>
-
-            <div class="space-y-2">
-                <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider" for="claim_amount">
-                    Claim Amount ($)
-                </label>
-                <input
-                    id="claim_amount"
-                    type="number"
-                    step="0.01"
-                    placeholder="Enter estimated loss or expense"
-                    class="block w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
-                    bind:value={formData.claim_amount}
-                    required
-                />
             </div>
 
             <div class="space-y-2">
@@ -131,7 +156,7 @@
                     id="reason"
                     rows="4"
                     class="block w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
-                    placeholder="Describe exactly what happened..."
+                    placeholder="Provide details about the incident..."
                     bind:value={formData.claim_reason}
                     required
                 ></textarea>

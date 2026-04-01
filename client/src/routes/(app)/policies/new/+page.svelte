@@ -7,48 +7,26 @@
     import { toast } from 'svelte-sonner';
     import { Shield, ArrowLeft } from 'lucide-svelte';
 
-    let providers = $state<any[]>([]);
-    let agents = $state<any[]>([]);
-    let users = $state<any[]>([]);
-    
     let formData = $state({
-        policy_number: '',
-        policy_holder_id: '',
-        provider_id: '',
-        agent_id: '',
+        title: '',
+        description: '',
         policy_type: 'health',
         coverage_amount: '',
         premium_amount: '',
-        end_date: ''
+        is_active: true
     });
 
     let isLoading = $state(false);
-
-    onMount(async () => {
-        if (auth.user?.role === 'customer') {
-            formData.policy_holder_id = auth.user.id.toString();
-        }
-        try {
-            const [providersRes, agentsRes] = await Promise.all([
-                api.get('providers/'),
-                api.get('agents/')
-            ]);
-            providers = providersRes.data.results || providersRes.data;
-            agents = agentsRes.data.results || agentsRes.data;
-        } catch (error) {
-            console.error('Failed to fetch initial data', error);
-        }
-    });
 
     async function handleSubmit(e: Event) {
         e.preventDefault();
         isLoading = true;
         try {
             await api.post('policies/', formData);
-            toast.success('Policy created successfully');
+            toast.success('New policy plan created successfully');
             goto('/policies');
         } catch (error: any) {
-            toast.error(error.response?.data?.error || 'Failed to create policy');
+            toast.error(error.response?.data?.error || error.response?.data?.detail || 'Failed to create policy');
         } finally {
             isLoading = false;
         }
@@ -61,110 +39,60 @@
             <ArrowLeft class="w-6 h-6 text-slate-600" />
         </a>
         <div>
-            <h1 class="text-3xl font-bold text-slate-900">Create New Policy</h1>
-            <p class="text-slate-500">Enter details to register a new insurance policy.</p>
+            <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Create New Policy Plan</h1>
+            <p class="text-slate-500 mt-1">Design a new insurance offering for the catalog.</p>
         </div>
     </div>
 
-    <form onsubmit={handleSubmit} class="bg-white rounded-2xl border border-slate-200 shadow-xl p-8 space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form onsubmit={handleSubmit} class="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden p-8 space-y-8">
+        <div class="space-y-6">
             <Input
-                label="Policy Number"
-                id="policy_number"
-                placeholder="POL-123456"
+                label="Policy Title"
+                placeholder="e.g. Comprehensive Family Health"
                 required
-                bind:value={formData.policy_number}
+                bind:value={formData.title}
             />
             
             <div class="space-y-1">
-                <label class="block text-sm font-medium text-slate-700" for="policy_type">
-                    Policy Type
-                </label>
-                <select
-                    id="policy_type"
-                    class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none"
-                    bind:value={formData.policy_type}
-                >
-                    <option value="health">Health</option>
-                    <option value="motor">Motor</option>
-                </select>
-            </div>
-
-            <div class="space-y-1">
-                <label class="block text-sm font-medium text-slate-700" for="provider">
-                    Provider
-                </label>
-                <select
-                    id="provider"
-                    class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none"
-                    bind:value={formData.provider_id}
+                <label class="block text-sm font-medium text-slate-700">Description</label>
+                <textarea 
+                    class="block w-full rounded-xl border-slate-200 bg-slate-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-all border p-4 outline-none" 
+                    rows="4"
+                    placeholder="Describe the coverage and benefits..."
+                    bind:value={formData.description}
                     required
-                >
-                    <option value="">Select Provider</option>
-                    {#each providers as provider}
-                        <option value={provider.id}>{provider.company_name}</option>
-                    {/each}
-                </select>
+                ></textarea>
             </div>
 
-            <div class="space-y-1">
-                <label class="block text-sm font-medium text-slate-700" for="agent">
-                    Agent
-                </label>
-                <select
-                    id="agent"
-                    class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none"
-                    bind:value={formData.agent_id}
-                    required
-                >
-                    <option value="">Select Agent</option>
-                    {#each agents as agent}
-                        <option value={agent.id}>{agent.name}</option>
-                    {/each}
-                </select>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-1">
+                    <label class="block text-sm font-medium text-slate-700">Policy Type</label>
+                    <select 
+                        class="block w-full rounded-xl border-slate-200 bg-slate-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-all border p-3 outline-none font-medium"
+                        bind:value={formData.policy_type}
+                    >
+                        <option value="health">Health</option>
+                        <option value="motor">Motor</option>
+                        <option value="life">Life</option>
+                        <option value="travel">Travel</option>
+                    </select>
+                </div>
+                
+                <Input label="Coverage Amount ($)" type="number" placeholder="50000" bind:value={formData.coverage_amount} required />
+                <Input label="Annual Premium ($)" type="number" placeholder="1200" bind:value={formData.premium_amount} required />
+                
+                <div class="flex items-center gap-2 pt-8">
+                    <input type="checkbox" id="is_active" bind:checked={formData.is_active} class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500" />
+                    <label for="is_active" class="text-sm font-medium text-slate-700">Active and available for purchase</label>
+                </div>
             </div>
-
-            <Input
-                label="Coverage Amount"
-                type="number"
-                id="coverage_amount"
-                placeholder="50000"
-                required
-                bind:value={formData.coverage_amount}
-            />
-
-            <Input
-                label="Premium Amount"
-                type="number"
-                id="premium_amount"
-                placeholder="1200"
-                required
-                bind:value={formData.premium_amount}
-            />
-
-            <Input
-                label="End Date"
-                type="date"
-                id="end_date"
-                required
-                bind:value={formData.end_date}
-            />
-            
-            <Input
-                label="Policy Holder ID (User ID)"
-                type="number"
-                id="policy_holder_id"
-                placeholder="1"
-                required
-                bind:value={formData.policy_holder_id}
-            />
         </div>
 
-        <div class="pt-4 border-t border-slate-100 flex justify-end gap-4">
+        <div class="pt-6 border-t border-slate-100 flex justify-end gap-4">
             <a href="/policies">
                 <Button variant="outline" type="button">Cancel</Button>
             </a>
-            <Button type="submit" loading={isLoading}>
+            <Button type="submit" loading={isLoading} class="px-8">
                 Create Policy
             </Button>
         </div>
