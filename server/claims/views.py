@@ -24,7 +24,7 @@ class ClaimViewSet(viewsets.ModelViewSet):
         if user.role == "agent":
             return Claim.objects.filter(user_policy__agent__user=user)
         if user.role == "surveyor":
-            return Claim.objects.filter(assigned_surveyor__user=user)
+            return Claim.objects.filter(assigned_surveyor=user)
         return Claim.objects.none()
 
     def perform_create(self, serializer):
@@ -57,7 +57,7 @@ class ClaimViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def approve(self, request, pk=None):
         claim = self.get_object()
-        if request.user.role == 'surveyor' and (not claim.assigned_surveyor or claim.assigned_surveyor.user != request.user):
+        if request.user.role == 'surveyor' and claim.assigned_surveyor != request.user:
             return Response({"error": "Not assigned to this claim"}, status=status.HTTP_403_FORBIDDEN)
         if request.user.role not in ['admin', 'surveyor']:
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
@@ -69,7 +69,7 @@ class ClaimViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def reject(self, request, pk=None):
         claim = self.get_object()
-        if request.user.role == 'surveyor' and (not claim.assigned_surveyor or claim.assigned_surveyor.user != request.user):
+        if request.user.role == 'surveyor' and claim.assigned_surveyor != request.user:
             return Response({"error": "Not assigned to this claim"}, status=status.HTTP_403_FORBIDDEN)
         if request.user.role not in ['admin', 'surveyor']:
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
@@ -86,12 +86,10 @@ class InspectionReportViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.role == 'admin':
             return InspectionReport.objects.all()
-        return InspectionReport.objects.filter(surveyor__user=user)
+        return InspectionReport.objects.filter(surveyor=user)
 
     def perform_create(self, serializer):
-        from insurance.models import Surveyor
-        surveyor = Surveyor.objects.get(user=self.request.user)
-        serializer.save(surveyor=surveyor)
+        serializer.save(surveyor=self.request.user)
 
 class SettlementViewSet(viewsets.ModelViewSet):
     serializer_class = SettlementSerializer

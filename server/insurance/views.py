@@ -18,8 +18,14 @@ import random
 class PolicyViewSet(viewsets.ModelViewSet):
     serializer_class = PolicySerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['title', 'description', 'provider__company_name']
-    filterset_fields = ['policy_type', 'is_active']
+    search_fields = ['title', 'description', 'provider__company_name', 'provider__user__username']
+    filterset_fields = {
+        'policy_type': ['exact'],
+        'is_active': ['exact'],
+        'premium_amount': ['gte', 'lte'],
+        'coverage_amount': ['gte', 'lte'],
+        'provider': ['exact'],
+    }
     ordering_fields = ['premium_amount', 'coverage_amount']
     
     def get_queryset(self):
@@ -144,8 +150,12 @@ class ServiceProviderViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated(), IsAdmin()]
 
 class SurveyorViewSet(viewsets.ModelViewSet):
-    queryset = Surveyor.objects.all()
     serializer_class = SurveyorSerializer
+    
+    def get_queryset(self):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        return User.objects.filter(role="surveyor")
     
     def get_permissions(self):
         if self.request.method == 'GET':

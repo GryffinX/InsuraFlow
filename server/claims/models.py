@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from insurance.models import UserPolicy, ServiceProvider, Surveyor
+from insurance.models import UserPolicy, ServiceProvider
 
 User = settings.AUTH_USER_MODEL
 
@@ -22,10 +22,10 @@ class Claim(models.Model):
     documents = models.FileField(upload_to='claims/', null=True, blank=True)
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='filed')
-    assigned_surveyor = models.ForeignKey(Surveyor, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_claims')
+    assigned_surveyor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_claims')
 
     def __str__(self):
-        return f"Claim: {self.id} - User: {self.user.email}"
+        return f"Claim: {self.id} - User: {self.user.email if self.user else 'N/A'}"
     
 class InspectionReport(models.Model):
     DAMAGE_LEVELS = [
@@ -35,7 +35,7 @@ class InspectionReport(models.Model):
     ]
 
     claim = models.ForeignKey(Claim, on_delete=models.CASCADE, related_name='inspections')
-    surveyor = models.ForeignKey(Surveyor, on_delete=models.SET_NULL, null=True, related_name='inspections')
+    surveyor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='inspections')
     inspection_date = models.DateField(auto_now_add=True)
     damage_level = models.CharField(max_length=15, choices=DAMAGE_LEVELS)
     estimated_loss = models.DecimalField(max_digits=12, decimal_places=2)

@@ -19,11 +19,9 @@ class AgentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class SurveyorSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
-    email = serializers.CharField(source='user.email', read_only=True)
     class Meta:
-        model = Surveyor
-        fields = ['id', 'name', 'license_no', 'region', 'phone', 'email', 'username']
+        model = User
+        fields = ['id', 'username', 'email', 'phone']
 
 class ServiceProviderSerializer(serializers.ModelSerializer):
     class Meta:

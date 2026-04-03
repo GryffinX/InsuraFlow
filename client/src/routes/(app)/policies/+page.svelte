@@ -11,8 +11,11 @@
 	let searchQuery = $state('');
 	let selectedType = $state('all');
 	let sortBy = $state('premium_amount');
+	let minPrice = $state('');
+	let maxPrice = $state('');
 	let compareList = $state<any[]>([]);
 	let showCompare = $state(false);
+	let showFilters = $state(false);
 	
 	let showCustomers = $state(false);
 	let selectedPolicyCustomers = $state<any[]>([]);
@@ -35,12 +38,13 @@
 				search: searchQuery,
 				ordering: sortBy
 			};
-			if (selectedType !== 'all') {
-				params.policy_type = selectedType;
-			}
+			if (selectedType !== 'all') params.policy_type = selectedType;
+			if (minPrice) params.premium_amount__gte = minPrice;
+			if (maxPrice) params.premium_amount__lte = maxPrice;
+
 			const res = await api.get('policies/', { params });
+			console.log("Policies API Response:", res.data);
 			policies = res.data.results || res.data;
-			console.log("Policies fetched:", policies);
 		} catch (error) {
 			console.error('Failed to load policies', error);
 			toast.error('Failed to load policies');
@@ -52,8 +56,8 @@
 	async function buyPolicy(policyId: number) {
 		try {
 			await api.post(`policies/${policyId}/buy/`);
-			toast.success('Policy purchased successfully! Check your dashboard.');
-			fetchPolicies(); // Refresh to update 'is_owned' status
+			toast.success('Policy purchased successfully!');
+			fetchPolicies();
 		} catch (error: any) {
 			toast.error(error.response?.data?.error || 'Failed to purchase policy');
 		}
@@ -110,47 +114,80 @@
 	</div>
 
 	<!-- Search & Filters Bar -->
-	<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-8 space-y-4 md:space-y-0 md:flex md:items-center md:gap-4">
-		<div class="relative flex-grow">
-			<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-			<input
-				type="text"
-				placeholder="Search by title, provider..."
-				class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-				bind:value={searchQuery}
-				oninput={handleSearch}
-			/>
-		</div>
-		
-		<div class="flex gap-2">
-			<select 
-				bind:value={selectedType} 
-				onchange={fetchPolicies}
-				class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
-			>
-				{#each policyTypes as type}
-					<option value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
-				{/each}
-			</select>
+	<div class="space-y-4 mb-8">
+		<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center gap-4">
+			<div class="relative flex-grow">
+				<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+				<input
+					type="text"
+					placeholder="Search by title, provider..."
+					class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+					bind:value={searchQuery}
+					oninput={handleSearch}
+				/>
+			</div>
+			
+			<div class="flex gap-2">
+				<Button variant="outline" onclick={() => showFilters = !showFilters}>
+					<Filter class="w-4 h-4 mr-2" /> {showFilters ? 'Hide' : ''} Filters
+				</Button>
 
-			<select 
-				bind:value={sortBy} 
-				onchange={fetchPolicies}
-				class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
-			>
-				<option value="premium_amount">Price: Low to High</option>
-				<option value="-premium_amount">Price: High to Low</option>
-				<option value="-coverage_amount">Coverage: High to Low</option>
-			</select>
+				<select 
+					bind:value={sortBy} 
+					onchange={fetchPolicies}
+					class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
+				>
+					<option value="premium_amount">Price: Low to High</option>
+					<option value="-premium_amount">Price: High to Low</option>
+					<option value="-coverage_amount">Coverage: High to Low</option>
+				</select>
+			</div>
+
+			{#if compareList.length > 0}
+				<Button variant="outline" onclick={() => showCompare = true} class="relative">
+					Compare ({compareList.length})
+					<span class="absolute -top-2 -right-2 bg-indigo-600 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold">
+						{compareList.length}
+					</span>
+				</Button>
+			{/if}
 		</div>
 
-		{#if compareList.length > 0}
-			<Button variant="outline" onclick={() => showCompare = true} class="relative">
-				Compare ({compareList.length})
-				<span class="absolute -top-2 -right-2 bg-indigo-600 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold">
-					{compareList.length}
-				</span>
-			</Button>
+		{#if showFilters}
+			<div class="bg-slate-100 p-6 rounded-2xl border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-top-2 duration-200">
+				<div class="space-y-2">
+					<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Policy Type</label>
+					<select 
+						bind:value={selectedType} 
+						onchange={fetchPolicies}
+						class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+					>
+						{#each policyTypes as type}
+							<option value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+						{/each}
+					</select>
+				</div>
+				<div class="space-y-2">
+					<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Min Premium ($)</label>
+					<input 
+						type="number" 
+						bind:value={minPrice} 
+						oninput={handleSearch}
+						placeholder="0"
+						class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm" 
+					/>
+				</div>
+				<div class="space-y-2">
+					<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Max Premium ($)</label>
+					<input 
+						type="number" 
+						bind:value={maxPrice} 
+						oninput={handleSearch}
+						placeholder="10000"
+						class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm" 
+					/>
+				</div>
+			</div>
 		{/if}
 	</div>
 

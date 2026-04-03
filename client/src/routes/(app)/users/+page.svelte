@@ -4,21 +4,12 @@
     import { onMount } from 'svelte';
     import { Button, Input } from '$lib/components';
     import { toast } from 'svelte-sonner';
-    import { Users, Search, UserPlus, Shield, Mail, Phone, Calendar, Filter, X } from 'lucide-svelte';
+    import { Users, Search, Shield, Mail, Phone, Calendar, Filter } from 'lucide-svelte';
 
     let users = $state<any[]>([]);
     let isLoading = $state(true);
     let searchQuery = $state('');
     
-    let showAddModal = $state(false);
-    let isCreating = $state(false);
-    let newUser = $state({
-        username: '',
-        email: '',
-        password: '',
-        role: 'customer'
-    });
-
     let debounceTimer: any;
     function handleSearch() {
         clearTimeout(debounceTimer);
@@ -35,28 +26,13 @@
             const res = await api.get('users/', {
                 params: { search: searchQuery }
             });
-            users = res.data.results || res.data;
-            console.log("Users fetched:", users);
+            const data = res.data.results || res.data;
+            users = data;
+            console.log("Admin Users API Response:", res.data);
         } catch (error) {
             toast.error('Failed to load users');
         } finally {
             isLoading = false;
-        }
-    }
-
-    async function createUser(e: Event) {
-        e.preventDefault();
-        isCreating = true;
-        try {
-            await api.post('users/', newUser);
-            toast.success('User created successfully');
-            showAddModal = false;
-            fetchUsers();
-            newUser = { username: '', email: '', password: '', role: 'customer' };
-        } catch (error: any) {
-            toast.error(error.response?.data?.error || 'Failed to create user');
-        } finally {
-            isCreating = false;
         }
     }
 
@@ -72,14 +48,9 @@
 </script>
 
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div>
-            <h1 class="text-3xl font-bold text-slate-900 tracking-tight">User Management</h1>
-            <p class="text-slate-500 mt-1">Manage all registered users and their roles.</p>
-        </div>
-        <Button onclick={() => showAddModal = true}>
-            <UserPlus class="w-5 h-5 mr-2" /> Add New User
-        </Button>
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-slate-900 tracking-tight">User Management</h1>
+        <p class="text-slate-500 mt-1">Global system oversight of all registered users and their roles.</p>
     </div>
 
     <!-- Search & Filters -->
@@ -124,7 +95,7 @@
                     
                     <div class="space-y-3">
                         <div>
-                            <h3 class="font-bold text-slate-900 line-ignore leading-tight">{user.username}</h3>
+                            <h3 class="font-bold text-slate-900 leading-tight">{user.username}</h3>
                             <p class="text-xs text-slate-500 flex items-center gap-1 mt-1">
                                 <Mail class="w-3 h-3" /> {user.email}
                             </p>
@@ -144,7 +115,7 @@
                                     </div>
                                 {/if}
                             </div>
-                            <Button variant="ghost" size="sm" class="text-xs font-bold text-indigo-600">Edit Profile</Button>
+                            <span class="text-[10px] text-slate-300 font-bold uppercase">ID: #{user.id}</span>
                         </div>
                     </div>
                 </div>
@@ -152,41 +123,3 @@
         {/if}
     </div>
 </div>
-
-{#if showAddModal}
-    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h2 class="text-xl font-bold text-slate-900">Add New User</h2>
-                <button onclick={() => showAddModal = false} class="p-2 hover:bg-slate-200 rounded-full transition-colors">
-                    <X class="w-6 h-6" />
-                </button>
-            </div>
-            
-            <form onsubmit={createUser} class="p-6 space-y-4">
-                <Input label="Username" bind:value={newUser.username} required />
-                <Input label="Email" type="email" bind:value={newUser.email} required />
-                <Input label="Password" type="password" bind:value={newUser.password} required />
-                
-                <div class="space-y-1">
-                    <label class="block text-sm font-medium text-slate-700">Role</label>
-                    <select 
-                        class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none"
-                        bind:value={newUser.role}
-                    >
-                        <option value="customer">Customer</option>
-                        <option value="agent">Agent</option>
-                        <option value="provider">Provider</option>
-                        <option value="surveyor">Surveyor</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-
-                <div class="pt-4 flex justify-end gap-3">
-                    <Button variant="ghost" type="button" onclick={() => showAddModal = false}>Cancel</Button>
-                    <Button type="submit" loading={isCreating}>Create User</Button>
-                </div>
-            </form>
-        </div>
-    </div>
-{/if}

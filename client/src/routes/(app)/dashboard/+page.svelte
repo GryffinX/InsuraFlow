@@ -24,8 +24,8 @@
 					api.get('user-policies/'),
 					api.get('claims/')
 				]);
-				mainData = policiesRes.data.results || policiesRes.data;
-				secondaryData = claimsRes.data.results || claimsRes.data;
+				mainData = policiesRes.data.results || (Array.isArray(policiesRes.data) ? policiesRes.data : []);
+				secondaryData = claimsRes.data.results || (Array.isArray(claimsRes.data) ? claimsRes.data : []);
 				
 				stats.primary = { label: 'Active Policies', value: mainData.filter(p => p.status === 'active').length, icon: Shield, color: 'text-indigo-600', bg: 'bg-indigo-50' };
 				stats.secondary = { label: 'Pending Claims', value: secondaryData.filter(c => c.status === 'filed').length, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' };
@@ -36,26 +36,27 @@
 					api.get('claims/'),
 					api.get('user-policies/')
 				]);
-				mainData = policiesRes.data.results || policiesRes.data;
-				secondaryData = claimsRes.data.results || claimsRes.data;
+				mainData = policiesRes.data.results || (Array.isArray(policiesRes.data) ? policiesRes.data : []);
+				secondaryData = claimsRes.data.results || (Array.isArray(claimsRes.data) ? claimsRes.data : []);
 
 				stats.primary = { label: 'Our Policies', value: mainData.length, icon: Shield, color: 'text-indigo-600', bg: 'bg-indigo-50' };
 				stats.secondary = { label: 'Policy Claims', value: secondaryData.length, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' };
-				stats.tertiary = { label: 'Total Customers', value: (customersRes.data.results || customersRes.data).length, icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-50' };
+				const customerData = customersRes.data.results || (Array.isArray(customersRes.data) ? customersRes.data : []);
+				stats.tertiary = { label: 'Total Customers', value: customerData.length, icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-50' };
 			} else if (role === 'agent') {
 				const [policiesRes, claimsRes] = await Promise.all([
 					api.get('user-policies/'),
 					api.get('claims/')
 				]);
-				mainData = policiesRes.data.results || policiesRes.data;
-				secondaryData = claimsRes.data.results || claimsRes.data;
+				mainData = policiesRes.data.results || (Array.isArray(policiesRes.data) ? policiesRes.data : []);
+				secondaryData = claimsRes.data.results || (Array.isArray(claimsRes.data) ? claimsRes.data : []);
 
 				stats.primary = { label: 'Managed Policies', value: mainData.length, icon: Shield, color: 'text-indigo-600', bg: 'bg-indigo-50' };
 				stats.secondary = { label: 'Customer Claims', value: secondaryData.length, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' };
-				stats.tertiary = { label: 'Active Clients', value: new Set(mainData.map(p => p.user)).size, icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-50' };
+				stats.tertiary = { label: 'Active Clients', value: new Set(mainData.map(p => p.user?.id || p.user)).size, icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-50' };
 			} else if (role === 'surveyor') {
 				const claimsRes = await api.get('claims/');
-				mainData = claimsRes.data.results || claimsRes.data;
+				mainData = claimsRes.data.results || (Array.isArray(claimsRes.data) ? claimsRes.data : []);
 				
 				stats.primary = { label: 'Assigned Claims', value: mainData.length, icon: FileText, color: 'text-indigo-600', bg: 'bg-indigo-50' };
 				stats.secondary = { label: 'Pending Review', value: mainData.filter(c => c.status === 'under_review').length, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' };
@@ -65,8 +66,8 @@
 					api.get('policies/'),
 					api.get('claims/'),
 				]);
-				mainData = policiesRes.data.results || policiesRes.data;
-				secondaryData = claimsRes.data.results || claimsRes.data;
+				mainData = policiesRes.data.results || (Array.isArray(policiesRes.data) ? policiesRes.data : []);
+				secondaryData = claimsRes.data.results || (Array.isArray(claimsRes.data) ? claimsRes.data : []);
 
 				stats.primary = { label: 'Total Policies', value: mainData.length, icon: Shield, color: 'text-indigo-600', bg: 'bg-indigo-50' };
 				stats.secondary = { label: 'Total Claims', value: secondaryData.length, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' };

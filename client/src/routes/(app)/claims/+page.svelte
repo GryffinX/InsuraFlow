@@ -23,11 +23,16 @@
 		isLoading = true;
 		try {
 			const res = await api.get('claims/', {
-				params: { search: searchQuery }
+				params: { 
+					search: searchQuery,
+					limit: 100 
+				}
 			});
-			claims = res.data.results || res.data;
-			console.log("Claims fetched:", claims);
+			const data = res.data.results || (Array.isArray(res.data) ? res.data : []);
+			claims = data;
+			console.log("Claims API Response:", res.data);
 		} catch (error) {
+			console.error('Failed to load claims', error);
 			toast.error('Failed to load claims');
 		} finally {
 			isLoading = false;
@@ -37,8 +42,9 @@
 	async function fetchSurveyors() {
 		try {
 			const res = await api.get('surveyors/');
-			surveyors = res.data.results || res.data;
-			console.log("Surveyors fetched:", surveyors);
+			const data = res.data.results || res.data;
+			surveyors = data;
+			console.log("Surveyors API response:", res.data);
 		} catch (error) {
 			console.error('Failed to load surveyors', error);
 			toast.error('Failed to load surveyors');
@@ -109,12 +115,12 @@
 		</Button>
 	</div>
 
-	<!-- Claims List -->
+	<!-- Claims List with Scrollable Container -->
 	<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-		<div class="overflow-x-auto">
+		<div class="overflow-x-auto max-h-[600px] overflow-y-auto">
 			<table class="w-full text-left border-collapse">
 				<thead>
-					<tr class="bg-slate-50 border-b border-slate-200">
+					<tr class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
 						<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Claim Details</th>
 						<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Claim Date</th>
 						<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Amount</th>
@@ -205,7 +211,7 @@
 					>
 						<option value="">Choose a surveyor</option>
 						{#each surveyors as s}
-							<option value={s.id}>{s.name} ({s.region})</option>
+							<option value={s.id}>{s.username} ({s.email})</option>
 						{/each}
 					</select>
 				</div>

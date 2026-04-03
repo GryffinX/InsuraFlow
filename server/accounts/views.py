@@ -101,9 +101,20 @@ class UserViewSet(viewsets.ModelViewSet):
             user.set_password(password)
             user.save()
         else:
-            # Default password if none provided
             user.set_password('Insuraflow@123')
             user.save()
+            
+        # Auto-create corresponding profiles
+        from insurance.models import Provider, Agent, Surveyor
+        try:
+            if user.role == 'provider':
+                Provider.objects.get_or_create(user=user, defaults={'company_name': user.username, 'contact_email': user.email})
+            elif user.role == 'agent':
+                Agent.objects.get_or_create(user=user, defaults={'name': user.username, 'email': user.email})
+            elif user.role == 'surveyor':
+                Surveyor.objects.get_or_create(user=user, defaults={'name': user.username, 'email': user.email, 'license_no': f"LNC-{user.id}", 'region': 'Unassigned'})
+        except Exception as e:
+            print(f"Error creating profile: {e}")
 
 class PasswordResetRequestView(APIView):
     permission_classes = []

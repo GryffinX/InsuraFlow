@@ -136,17 +136,17 @@
                         </div>
                         <div>
                             <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Assigned Surveyor</p>
-                            <p class="text-lg font-bold text-indigo-900">{claim.assigned_surveyor.name}</p>
+                            <p class="text-lg font-bold text-indigo-900">{claim.assigned_surveyor.username}</p>
                         </div>
                     </div>
                     <div class="text-right text-indigo-600">
-                        <p class="text-sm font-medium">{claim.assigned_surveyor.region} Region</p>
-                        <p class="text-xs opacity-75">{claim.assigned_surveyor.phone}</p>
+                        <p class="text-sm font-medium">{claim.assigned_surveyor.email}</p>
+                        <p class="text-xs opacity-75">{claim.assigned_surveyor.phone || ''}</p>
                     </div>
                 </div>
             {/if}
 
-            {#if claim.status === 'under_review' && (auth.user?.role === 'admin' || (auth.user?.role === 'surveyor' && claim.assigned_surveyor?.user === auth.user?.id))}
+            {#if claim.status === 'under_review' && (auth.user?.role === 'admin' || (auth.user?.role === 'surveyor' && claim.assigned_surveyor?.id === auth.user?.id))}
                 <div class="pt-8 border-t border-slate-100 flex gap-4">
                     <Button 
                         class="flex-grow h-14 text-lg font-bold bg-emerald-600 hover:bg-emerald-700" 
