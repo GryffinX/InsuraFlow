@@ -3,6 +3,7 @@ from rest_framework import viewsets, status, filters
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError, PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
 
 from accounts.permissions import IsAdmin, IsAgentOrAdmin, IsProvider, IsCustomer, IsVerifiedUser
@@ -14,6 +15,9 @@ from .serializers import (
 )
 from datetime import date, timedelta
 import random
+import logging
+
+logger = logging.getLogger(__name__)
 
 class PolicyViewSet(viewsets.ModelViewSet):
     serializer_class = PolicySerializer
@@ -27,51 +31,106 @@ class PolicyViewSet(viewsets.ModelViewSet):
         'provider': ['exact'],
     }
     ordering_fields = ['premium_amount', 'coverage_amount']
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method in ['POST', 'PUT', 'PATCH']:
+            # Safely log body if possible
+            try:
+                logger.info(f"Policy API Request: {request.method} {request.path} Body: {request.body.decode('utf-8')}")
+            except:
+                logger.info(f"Policy API Request: {request.method} {request.path}")
+        return super().dispatch(request, *args, **kwargs)
     
     def get_queryset(self):
         user = self.request.user
         if not user or not user.is_authenticated:
             return Policy.objects.filter(is_active=True)
         
+        if user.role == 'provider':
+            # Providers only see their own policies
+            return Policy.objects.filter(provider__user=user)
+        
+        # Admin, Agent, and others see all active policies
+        # Admin can see inactive ones too if needed, let's allow all for admin
         if user.role == 'admin':
             return Policy.objects.all()
-        if user.role == 'provider':
-            return Policy.objects.filter(provider__user=user)
-        if user.role == 'agent':
-            return Policy.objects.all() # Agents can see all to recommend
-        
+            
         return Policy.objects.filter(is_active=True)
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [AllowAny()]
-        if self.action in ['create', 'update', 'partial_update', 'destroy', 'buy']:
-            return [IsAuthenticated(), IsVerifiedUser(), IsProvider() | IsAdmin() | IsAgentOrAdmin()]
-        return [IsAuthenticated()]
+        
+        # All CRUD operations require authentication and verification
+        perms = [IsAuthenticated(), IsVerifiedUser()]
+        
+        if self.action == 'create':
+            perms.append(IsProvider() | IsAgent() | IsAdmin())
+        elif self.action in ['update', 'partial_update', 'destroy']:
+            perms.append(IsProvider() | IsAdmin())
+            
+        return perms
 
     def perform_create(self, serializer):
         user = self.request.user
+        
         if user.role == 'provider':
-            serializer.save(provider=user.provider_profile)
+            provider = getattr(user, 'provider_profile', None)
+            if not provider:
+                raise ValidationError("Provider profile not found.")
+            serializer.save(provider=provider)
         elif user.role == 'agent':
-            if user.agent_profile.provider:
-                serializer.save(provider=user.agent_profile.provider)
-            else:
-                from rest_framework.exceptions import ValidationError
-                raise ValidationError({"detail": "Agent is not assigned to any provider."})
+            agent = getattr(user, 'agent_profile', None)
+            if not agent or not agent.provider:
+                raise ValidationError("Agent is not properly assigned to a provider.")
+            serializer.save(provider=agent.provider)
         elif user.role == 'admin':
             serializer.save()
         else:
-            from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("Only providers, agents, or admins can create policies.")
+
+    def update(self, request, *args, **kwargs):
+        logger.info(f"Policy API Update - Method: {request.method}, Data: {request.data}")
+        try:
+            partial = kwargs.pop('partial', False)
+            if request.method == 'PATCH':
+                partial = True
+            
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Policy update failed: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
+            raise
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        instance = self.get_object()
+        if user.role == 'provider' and instance.provider.user != user:
+            raise PermissionDenied("You can only edit your own policies.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+        if user.role == 'provider' and instance.provider.user != user:
+            raise PermissionDenied("You can only delete your own policies.")
+        instance.delete()
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated, IsProvider | IsAdmin])
     def customers(self, request, pk=None):
         policy = self.get_object()
+        # Ensure provider only sees customers for their own policy
+        if request.user.role == 'provider' and policy.provider.user != request.user:
+            raise PermissionDenied("You do not have access to this policy's customer list.")
         customers = UserPolicy.objects.filter(policy=policy)
         return Response(UserPolicySerializer(customers, many=True).data)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsVerifiedUser])
     def buy(self, request, pk=None):
         policy = self.get_object()
         
@@ -80,7 +139,7 @@ class PolicyViewSet(viewsets.ModelViewSet):
             from django.contrib.auth import get_user_model
             User = get_user_model()
             user = User.objects.get(id=user_id)
-            agent = request.user.agent_profile if request.user.role == 'agent' else None
+            agent = getattr(request.user, 'agent_profile', None) if request.user.role == 'agent' else None
         else:
             if request.user.role != 'customer':
                 return Response({"error": "Only customers can buy directly, or agents/admins must specify user_id."}, status=status.HTTP_400_BAD_REQUEST)

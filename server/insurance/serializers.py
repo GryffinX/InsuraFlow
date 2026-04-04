@@ -30,9 +30,6 @@ class ServiceProviderSerializer(serializers.ModelSerializer):
 
 class PolicySerializer(serializers.ModelSerializer):
     provider = ProviderSerializer(read_only=True)
-    provider_id = serializers.PrimaryKeyRelatedField(
-        queryset=Provider.objects.all(), source='provider', write_only=True, required=False, allow_null=True
-    )
     is_owned = serializers.SerializerMethodField()
 
     class Meta:
@@ -40,8 +37,31 @@ class PolicySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'policy_type', 
             'coverage_amount', 'premium_amount', 
-            'provider', 'provider_id', 'is_active', 'is_owned'
+            'provider', 'is_active', 'is_owned'
         ]
+
+    def to_internal_value(self, data):
+        # Ignore provider related fields from input
+        data = data.copy()
+        data.pop('provider', None)
+        data.pop('provider_id', None)
+
+        # Type conversion for numeric fields
+        for field in ['coverage_amount', 'premium_amount']:
+            if field in data and data[field] == '':
+                data[field] = 0.0
+            if field in data:
+                try:
+                    data[field] = float(data[field])
+                except (ValueError, TypeError):
+                    pass
+
+        # Type conversion for boolean field
+        if 'is_active' in data:
+            if isinstance(data['is_active'], str):
+                data['is_active'] = data['is_active'].lower() in ['true', '1', 'yes']
+
+        return super().to_internal_value(data)
 
     def get_is_owned(self, obj):
         request = self.context.get('request')

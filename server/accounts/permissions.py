@@ -25,5 +25,6 @@ class IsAgentOrAdmin(BasePermission):
         return request.user and request.user.is_authenticated and request.user.role in ["agent","admin"]
 
 class IsVerifiedUser(BasePermission):
+    message = "Your account is pending verification."
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated and request.user.is_verified

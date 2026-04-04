@@ -41,6 +41,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     search_fields = ['username', 'email', 'phone']
     filterset_fields = ['role', 'is_verified']
+    pagination_class = None
 
     @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated, IsAdmin])
     def verify(self, request, pk=None):
