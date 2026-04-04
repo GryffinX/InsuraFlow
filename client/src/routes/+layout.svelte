@@ -9,9 +9,11 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<title>InsuraFlow</title>
+	<meta name="theme-color" content="#140f33" />
 </svelte:head>
 
-<div class="min-h-screen bg-slate-50 flex flex-col">
+<div class="min-h-screen flex flex-col">
 	<Navbar />
 	<main class="flex-grow">
 		{@render children()}

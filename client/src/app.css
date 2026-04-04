@@ -1,1 +1,134 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Aptos', 'Segoe UI Variable', 'Segoe UI', 'Inter', system-ui, sans-serif;
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+}
+
+:root {
+  --surface-0: #0a0920;
+  --surface-1: #11112b;
+  --surface-2: #171739;
+  --surface-3: #22224f;
+  --text-1: #f8f8ff;
+  --text-2: #c7cae7;
+  --text-3: #9198c6;
+  --brand-1: #8b5cf6;
+  --brand-2: #c084fc;
+  --brand-3: #6d28d9;
+  --accent-cyan: #67e8f9;
+  --accent-emerald: #6ee7b7;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top left, rgba(192, 132, 252, 0.24), transparent 30%),
+      radial-gradient(circle at top right, rgba(103, 232, 249, 0.12), transparent 24%),
+      linear-gradient(180deg, #f5efff 0%, #eef2ff 44%, #eef4fb 100%);
+    @apply antialiased;
+  }
+
+  ::selection {
+    background: rgba(192, 132, 252, 0.32);
+    color: white;
+  }
+}
+
+@layer components {
+  .glass-card {
+    background: linear-gradient(180deg, rgba(32, 30, 72, 0.82), rgba(16, 16, 38, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 24px 80px rgba(5, 8, 24, 0.45);
+    @apply backdrop-blur-xl;
+  }
+
+  .panel-card {
+    background: linear-gradient(180deg, rgba(33, 32, 75, 0.96), rgba(15, 18, 42, 0.96));
+    border: 1px solid rgba(160, 173, 255, 0.12);
+    box-shadow: 0 18px 50px rgba(7, 10, 30, 0.35);
+    @apply rounded-[28px];
+  }
+
+  .brand-chip {
+    background: rgba(124, 58, 237, 0.14);
+    border: 1px solid rgba(216, 180, 254, 0.18);
+    color: #e9d5ff;
+    @apply inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.24em];
+  }
+
+  .input-field {
+    background: rgba(18, 19, 44, 0.92);
+    border: 1px solid rgba(144, 156, 220, 0.18);
+    color: var(--text-1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    @apply block w-full rounded-2xl px-4 py-3 outline-none transition-all duration-300;
+  }
+
+  .input-field::placeholder {
+    color: var(--text-3);
+  }
+
+  .input-field:focus {
+    border-color: rgba(192, 132, 252, 0.58);
+    box-shadow:
+      0 0 0 4px rgba(139, 92, 246, 0.16),
+      0 18px 35px rgba(29, 20, 68, 0.35);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-orb {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-18px) scale(1.03);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(192, 132, 252, 0);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(192, 132, 252, 0.22);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in-delay {
+  animation: fade-in-up 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-float-orb {
+  animation: float-orb 9s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3.6s ease-in-out infinite;
+}

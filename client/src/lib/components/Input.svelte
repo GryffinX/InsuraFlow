@@ -11,16 +11,16 @@
 	let { class: className, label, error, type = "text", value = $bindable(), ...props }: Props = $props();
 </script>
 
-<div class="space-y-1">
+<div class="space-y-2 group">
 	{#if label}
-		<label class="block text-sm font-medium text-slate-700" for={props.id}>
+		<label class="ml-1 block text-xs font-bold uppercase tracking-[0.22em] text-slate-400 transition-colors group-focus-within:text-violet-300" for={props.id}>
 			{label}
 		</label>
 	{/if}
 	<input
 		class={cn(
-			'block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none',
-			error ? 'border-red-500' : 'border-slate-300',
+			'input-field',
+			error ? 'border-rose-400/50 bg-rose-950/30 focus:shadow-[0_0_0_4px_rgba(251,113,133,0.12)]' : '',
 			className
 		)}
 		{type}
@@ -28,6 +28,6 @@
 		{...props}
 	/>
 	{#if error}
-		<p class="text-xs text-red-500 mt-1">{error}</p>
+		<p class="mt-1.5 ml-1 text-xs font-bold text-rose-300 animate-fade-in">{error}</p>
 	{/if}
 </div>

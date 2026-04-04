@@ -2,33 +2,60 @@ version: "3.9"
 
 services:
   db:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: insuraflow_db
     restart: always
-    env_file:
-      - .env
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME:-insuraflow_db}
+      POSTGRES_USER: ${DB_USER:-insuraflow_user}
+      POSTGRES_PASSWORD: ${DB_PASS:-insuraflow_pass}
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: insuraflow_redis
+    restart: always
+    ports:
+      - "6379:6379"
 
   backend:
     build: ./server
     container_name: insuraflow_backend
-    command: python manage.py runserver 0.0.0.0:8000
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./server:/app
-      - /dev/null:/app/.env.local
     ports:
       - "8000:8000"
-    env_file:
-      - .env
+    environment:
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME:-insuraflow_db}
+      - DB_USER=${DB_USER:-insuraflow_user}
+      - DB_PASS=${DB_PASS:-insuraflow_pass}
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/1
+      - DEBUG=True
+      - SECRET_KEY=${SECRET_KEY}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
     depends_on:
       - db
+      - redis
+
+  frontend:
+    build: ./client
+    container_name: insuraflow_frontend
+    ports:
+      - "5173:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api/
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

@@ -3,7 +3,7 @@
 	import { Button, Input } from '$lib/components';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
-	import { ShieldCheck, User, Mail, Lock } from 'lucide-svelte';
+	import { ShieldCheck, User, Mail, Lock, Sparkles } from 'lucide-svelte';
 
 	let username = $state('');
 	let email = $state('');
@@ -24,28 +24,33 @@
 				role,
 				secret_key: secretKey
 			});
-			toast.success('Registration successful! Please log in.');
+			toast.success('Account created! Sign in to continue.');
 			goto('/login');
 		} catch (error: any) {
-			toast.error(error.response?.data?.secret_key || error.response?.data?.error || 'Registration failed');
+			const msg = error.response?.data?.secret_key || error.response?.data?.error || 'Registration failed';
+			toast.error(msg);
 		} finally {
 			isLoading = false;
 		}
 	}
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12">
-	<div class="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl border border-slate-200 shadow-xl">
+<div class="min-h-[calc(100vh-80px)] flex items-center justify-center p-4 relative overflow-hidden">
+    <!-- Abstract background shapes -->
+    <div class="absolute top-0 right-0 w-96 h-96 bg-indigo-100 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 opacity-50"></div>
+    <div class="absolute bottom-0 left-0 w-96 h-96 bg-emerald-50 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2 opacity-50"></div>
+
+	<div class="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl border border-slate-200 shadow-2xl relative z-10 animate-fade-in">
 		<div class="text-center">
-			<div class="bg-indigo-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-				<ShieldCheck class="w-8 h-8 text-indigo-600" />
+			<div class="bg-indigo-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+				<Sparkles class="w-8 h-8 text-indigo-600" />
 			</div>
-			<h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Create an account</h2>
-			<p class="mt-2 text-slate-500">Join InsuraFlow today.</p>
+			<h2 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Create Account</h2>
+			<p class="text-slate-500 font-medium">Join the next generation of insurance</p>
 		</div>
 
-		<form class="mt-8 space-y-6" onsubmit={handleSubmit}>
-			<div class="space-y-4">
+		<form class="mt-10 space-y-6" onsubmit={handleSubmit}>
+			<div class="space-y-5">
 				<Input
 					label="Username"
 					placeholder="johndoe"
@@ -53,7 +58,7 @@
 					bind:value={username}
 				/>
 				<Input
-					label="Email address"
+					label="Email Address"
 					type="email"
 					placeholder="name@example.com"
 					required
@@ -67,47 +72,42 @@
 					bind:value={password}
 				/>
 
-				<div class="space-y-1">
-					<label class="block text-sm font-medium text-slate-700">I am a...</label>
+				<div class="space-y-2">
+					<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Account Type</label>
 					<select
 						bind:value={role}
-						class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none"
+						class="input-field py-[14px]"
 					>
 						<option value="customer">Customer</option>
 						<option value="agent">Agent</option>
 						<option value="provider">Provider</option>
-						<option value="surveyor">Surveyor</option>
-						<option value="admin">Admin</option>
+                        <option value="surveyor">Surveyor</option>
 					</select>
 				</div>
 
 				{#if role !== 'customer'}
 					<Input
-						label="Secret Key"
+						label="Organization Secret Key"
 						type="password"
-						placeholder="Enter role-specific secret key"
+						placeholder="Provided by InsuraFlow"
 						required
 						bind:value={secretKey}
 					/>
 				{/if}
 			</div>
 
-			<Button type="submit" class="w-full h-12 text-lg font-bold" loading={isLoading}>
-				Sign up
+			<Button type="submit" class="w-full h-14 text-lg" loading={isLoading}>
+				Get Started
 			</Button>
 
-			<div class="relative">
-				<div class="absolute inset-0 flex items-center">
-					<div class="w-full border-t border-slate-200"></div>
-				</div>
-				<div class="relative flex justify-center text-sm">
-					<span class="px-2 bg-white text-slate-500">Already have an account?</span>
-				</div>
+			<div class="text-center pt-4 border-t border-slate-100">
+                <p class="text-sm text-slate-500 font-medium">
+                    Already a member? 
+                    <a href="/login" class="text-indigo-600 font-black hover:text-indigo-700 transition-colors ml-1">
+                        Sign In
+                    </a>
+                </p>
 			</div>
-
-			<a href="/login" class="block w-full text-center text-sm font-bold text-indigo-600 hover:text-indigo-500">
-				Log in instead
-			</a>
 		</form>
 	</div>
 </div>
