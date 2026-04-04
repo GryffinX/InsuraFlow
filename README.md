@@ -46,8 +46,6 @@ InsuraFlow features a sophisticated **Purple, Emerald, and Amber** theme, focusi
 
 ### Backend (Django)
 *   **Architecture:** RESTful API with Django REST Framework (DRF).
-*   **Caching:** Redis integration for OTP and token management.
-*   **Email:** Resend API & Gmail SMTP support for reliable delivery.
 *   **Security:** JWT (SimpleJWT) with `withCredentials` session persistence.
 *   **Database:** PostgreSQL (Production) / SQLite (Local).
 
