@@ -2,7 +2,7 @@
 	import { auth } from '$lib/stores/auth.svelte';
 	import { api } from '$lib/api/axios';
 	import { onMount } from 'svelte';
-	import { Shield, FileText, Clock, CheckCircle, AlertCircle, ArrowRight, Users, Briefcase, Activity } from 'lucide-svelte';
+	import { Shield, FileText, Clock, CheckCircle, AlertCircle, ArrowRight, Users, Activity } from 'lucide-svelte';
 	import { Button } from '$lib/components';
 
 	let stats = $state({
@@ -119,7 +119,7 @@
 						</Button>
 					</a>
 				{/if}
-				{#if role === 'provider' || role === 'agent'}
+				{#if role === 'provider' || role === 'admin'}
 					<a href="/policies/new">
 						<Button>
 							<Shield class="w-5 h-5 mr-2" /> Create Policy

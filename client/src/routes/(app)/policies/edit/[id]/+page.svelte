@@ -6,7 +6,7 @@
     import { goto } from '$app/navigation';
     import { Button, Input } from '$lib/components';
     import { toast } from 'svelte-sonner';
-    import { Save, ArrowLeft, Shield } from 'lucide-svelte';
+    import { Save, ArrowLeft } from 'lucide-svelte';
 
     const id = page.params.id;
     let formData = $state<any>(null);
@@ -14,6 +14,12 @@
     let isSubmitting = $state(false);
 
     onMount(async () => {
+        if (auth.user?.role !== 'admin' && auth.user?.role !== 'provider') {
+            toast.error('Only admins and policy-owning providers can edit policies');
+            goto('/policies');
+            return;
+        }
+
         try {
             const res = await api.get(`policies/${id}/`);
             const data = res.data;
@@ -25,8 +31,8 @@
                 premium_amount: data.premium_amount,
                 is_active: data.is_active
             };
-        } catch (error) {
-            toast.error('Failed to load policy');
+        } catch (error: any) {
+            toast.error(error.response?.data?.detail || 'Failed to load policy');
             goto('/policies');
         } finally {
             isLoading = false;
@@ -39,9 +45,9 @@
         try {
             await api.patch(`policies/${id}/`, formData);
             toast.success('Policy updated successfully');
-            goto('/policies');
+            await goto('/policies', { invalidateAll: true });
         } catch (error: any) {
-            toast.error(error.response?.data?.error || 'Failed to update policy');
+            toast.error(error.response?.data?.error || error.response?.data?.detail || 'Failed to update policy');
         } finally {
             isSubmitting = false;
         }

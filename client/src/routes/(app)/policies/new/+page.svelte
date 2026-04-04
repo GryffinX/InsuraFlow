@@ -5,7 +5,7 @@
     import { goto } from '$app/navigation';
     import { Button, Input } from '$lib/components';
     import { toast } from 'svelte-sonner';
-    import { Shield, ArrowLeft } from 'lucide-svelte';
+    import { ArrowLeft } from 'lucide-svelte';
 
     let formData = $state({
         title: '',
@@ -18,13 +18,20 @@
 
     let isLoading = $state(false);
 
+    onMount(() => {
+        if (auth.user?.role !== 'admin' && auth.user?.role !== 'provider') {
+            toast.error('Only admins and providers can create policies');
+            goto('/policies');
+        }
+    });
+
     async function handleSubmit(e: Event) {
         e.preventDefault();
         isLoading = true;
         try {
             await api.post('policies/', formData);
             toast.success('New policy plan created successfully');
-            goto('/policies');
+            await goto('/policies', { invalidateAll: true });
         } catch (error: any) {
             toast.error(error.response?.data?.error || error.response?.data?.detail || 'Failed to create policy');
         } finally {

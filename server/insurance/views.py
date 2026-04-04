@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from rest_framework import viewsets, status, filters
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
 
-from accounts.permissions import IsAdmin, IsAgentOrAdmin, IsProvider, IsCustomer, IsVerifiedUser
+from accounts.permissions import IsAdmin, IsProvider, IsVerifiedUser
 from .models import Provider, Agent, Policy, ServiceProvider, Surveyor, UserPolicy
 from .serializers import (
     ProviderSerializer, AgentSerializer, PolicySerializer, 
@@ -51,57 +51,47 @@ class PolicyViewSet(viewsets.ModelViewSet):
             return Policy.objects.filter(provider__user=user)
         
         # Admin, Agent, and others see all active policies
-        # Admin can see inactive ones too if needed, let's allow all for admin
         if user.role == 'admin':
             return Policy.objects.all()
             
         return Policy.objects.filter(is_active=True)
 
     def get_permissions(self):
+        permission_classes = [IsAuthenticated, IsVerifiedUser]
+
         if self.action in ['list', 'retrieve']:
-            return [AllowAny()]
-        
-        # All CRUD operations require authentication and verification
-        perms = [IsAuthenticated(), IsVerifiedUser()]
-        
+            permission_classes = [AllowAny]
         if self.action == 'create':
-            perms.append(IsProvider() | IsAgent() | IsAdmin())
-        elif self.action in ['update', 'partial_update', 'destroy']:
-            perms.append(IsProvider() | IsAdmin())
-            
-        return perms
+            permission_classes.append(IsProvider | IsAdmin)
+        elif self.action in ['update', 'partial_update', 'destroy', 'customers']:
+            permission_classes.append(IsProvider | IsAdmin)
+
+        return [permission() for permission in permission_classes]
+
+    def _ensure_policy_owner_or_admin(self, policy, user, action_name):
+        if user.role == 'admin':
+            return
+
+        if user.role != 'provider' or not policy.provider or policy.provider.user != user:
+            raise PermissionDenied(f"You can only {action_name} policies owned by your provider account.")
 
     def perform_create(self, serializer):
         user = self.request.user
-        
         if user.role == 'provider':
             provider = getattr(user, 'provider_profile', None)
             if not provider:
-                raise ValidationError("Provider profile not found.")
+                raise ValidationError("Provider profile not found. Please complete your profile.")
             serializer.save(provider=provider)
-        elif user.role == 'agent':
-            agent = getattr(user, 'agent_profile', None)
-            if not agent or not agent.provider:
-                raise ValidationError("Agent is not properly assigned to a provider.")
-            serializer.save(provider=agent.provider)
         elif user.role == 'admin':
             serializer.save()
         else:
-            raise PermissionDenied("Only providers, agents, or admins can create policies.")
+            raise PermissionDenied("Only providers or admins can create policies.")
 
     def update(self, request, *args, **kwargs):
         logger.info(f"Policy API Update - Method: {request.method}, Data: {request.data}")
         try:
-            partial = kwargs.pop('partial', False)
-            if request.method == 'PATCH':
-                partial = True
-            
-            instance = self.get_object()
-            serializer = self.get_serializer(instance, data=request.data, partial=partial)
-            serializer.is_valid(raise_exception=True)
-            self.perform_update(serializer)
-            
-            return Response(serializer.data)
+            kwargs['partial'] = True
+            return super().update(request, *args, **kwargs)
         except Exception as e:
             logger.error(f"Policy update failed: {str(e)}")
             import traceback
@@ -111,22 +101,40 @@ class PolicyViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         user = self.request.user
         instance = self.get_object()
-        if user.role == 'provider' and instance.provider.user != user:
-            raise PermissionDenied("You can only edit your own policies.")
+
+        self._ensure_policy_owner_or_admin(instance, user, 'update')
         serializer.save()
 
-    def perform_destroy(self, instance):
-        user = self.request.user
-        if user.role == 'provider' and instance.provider.user != user:
-            raise PermissionDenied("You can only delete your own policies.")
-        instance.delete()
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        user = request.user
+
+        self._ensure_policy_owner_or_admin(instance, user, 'delete')
+        try:
+            with transaction.atomic():
+                # Clean Up Dependencies
+                UserPolicy.objects.filter(policy=instance).delete()
+                instance.delete()
+
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        except (models.ProtectedError, models.IntegrityError) as e:
+            logger.error(f"Policy deletion failed: {str(e)}")
+            return Response(
+                {"error": "Cannot delete policy due to existing dependencies."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            logger.error(f"Unexpected policy deletion error: {str(e)}")
+            return Response(
+                {"error": "An error occurred while deleting the policy."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated, IsProvider | IsAdmin])
     def customers(self, request, pk=None):
         policy = self.get_object()
-        # Ensure provider only sees customers for their own policy
-        if request.user.role == 'provider' and policy.provider.user != request.user:
-            raise PermissionDenied("You do not have access to this policy's customer list.")
+        self._ensure_policy_owner_or_admin(policy, request.user, 'view customer lists for')
         customers = UserPolicy.objects.filter(policy=policy)
         return Response(UserPolicySerializer(customers, many=True).data)
 
@@ -142,7 +150,7 @@ class PolicyViewSet(viewsets.ModelViewSet):
             agent = getattr(request.user, 'agent_profile', None) if request.user.role == 'agent' else None
         else:
             if request.user.role != 'customer':
-                return Response({"error": "Only customers can buy directly, or agents/admins must specify user_id."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Only customers can buy directly."}, status=status.HTTP_400_BAD_REQUEST)
             user = request.user
             agent = None
         

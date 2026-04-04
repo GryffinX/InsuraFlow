@@ -2,7 +2,7 @@
 	import { api } from '$lib/api/axios';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { onMount } from 'svelte';
-	import { Shield, Search, Filter, ArrowUpDown, Check, Info, ShoppingCart, X, Edit, Trash2, Users, Plus } from 'lucide-svelte';
+	import { Shield, Search, Filter, ArrowUpDown, Check, ShoppingCart, X, Edit, Trash2, Users, Plus } from 'lucide-svelte';
 	import { Button } from '$lib/components';
 	import { toast } from 'svelte-sonner';
 
@@ -78,9 +78,15 @@
 		try {
 			await api.delete(`policies/${id}/`);
 			toast.success('Policy deleted successfully');
+			compareList = compareList.filter((policy) => policy.id !== id);
+			if (showCustomers) {
+				showCustomers = false;
+				selectedPolicyCustomers = [];
+				selectedPolicyTitle = '';
+			}
 			fetchPolicies();
 		} catch (error: any) {
-			toast.error('Failed to delete policy');
+			toast.error(error.response?.data?.error || error.response?.data?.detail || 'Failed to delete policy');
 		}
 	}
 
@@ -104,7 +110,7 @@
 			<h1 class="text-3xl font-bold text-slate-900 tracking-tight">Explore Policies</h1>
 			<p class="text-slate-500 mt-1 text-lg">Compare and find the best coverage for your needs.</p>
 		</div>
-		{#if auth.user?.role === 'provider' || auth.user?.role === 'admin' || auth.user?.role === 'agent'}
+		{#if auth.user?.role === 'provider' || auth.user?.role === 'admin'}
 			<a href="/policies/new">
 				<Button>
 					<Plus class="w-5 h-5 mr-2" /> Add New Policy
@@ -262,7 +268,7 @@
 							</a>
 						{/if}
 
-						{#if auth.user?.role === 'provider' || auth.user?.role === 'admin' || auth.user?.role === 'agent'}
+						{#if auth.user?.role === 'provider' || auth.user?.role === 'admin'}
 							<div class="flex gap-2 w-full">
 								<Button variant="outline" class="flex-grow" onclick={() => viewCustomers(policy)}>
 									<Users class="w-4 h-4 mr-2" /> Customers
