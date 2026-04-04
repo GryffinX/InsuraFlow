@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
-from accounts.permissions import IsAdmin, IsAgentOrAdmin, IsProvider, IsCustomer
+from accounts.permissions import IsAdmin, IsAgentOrAdmin, IsProvider, IsCustomer, IsVerifiedUser
 from .models import Provider, Agent, Policy, ServiceProvider, Surveyor, UserPolicy
 from .serializers import (
     ProviderSerializer, AgentSerializer, PolicySerializer, 
@@ -45,8 +45,8 @@ class PolicyViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [AllowAny()]
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAuthenticated(), IsProvider() | IsAdmin() | IsAgentOrAdmin()]
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'buy']:
+            return [IsAuthenticated(), IsVerifiedUser(), IsProvider() | IsAdmin() | IsAgentOrAdmin()]
         return [IsAuthenticated()]
 
     def perform_create(self, serializer):
@@ -110,6 +110,11 @@ class UserPolicyViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserPolicySerializer
     permission_classes = [IsAuthenticated]
 
+    def get_permissions(self):
+        if self.action not in ['list', 'retrieve']:
+            return [IsAuthenticated(), IsVerifiedUser()]
+        return [IsAuthenticated()]
+
     def get_queryset(self):
         user = self.request.user
         if user.role == 'admin':
@@ -125,12 +130,12 @@ class UserPolicyViewSet(viewsets.ReadOnlyModelViewSet):
 class ProviderViewSet(viewsets.ModelViewSet):
     queryset = Provider.objects.all()
     serializer_class = ProviderSerializer
-    permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated, IsAdmin, IsVerifiedUser]
 
 class AgentViewSet(viewsets.ModelViewSet):
     queryset = Agent.objects.all()
     serializer_class = AgentSerializer
-    permission_classes = [IsAuthenticated, IsAdmin | IsProvider]
+    permission_classes = [IsAuthenticated, IsAdmin | IsProvider, IsVerifiedUser]
 
     def get_queryset(self):
         user = self.request.user
@@ -147,7 +152,7 @@ class ServiceProviderViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.request.method == 'GET':
             return [AllowAny()]
-        return [IsAuthenticated(), IsAdmin()]
+        return [IsAuthenticated(), IsAdmin(), IsVerifiedUser()]
 
 class SurveyorViewSet(viewsets.ModelViewSet):
     serializer_class = SurveyorSerializer
@@ -160,4 +165,4 @@ class SurveyorViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.request.method == 'GET':
             return [AllowAny()]
-        return [IsAuthenticated(), IsAdmin | IsProvider]
+        return [IsAuthenticated(), IsAdmin | IsProvider, IsVerifiedUser()]

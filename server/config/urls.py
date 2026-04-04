@@ -37,6 +37,7 @@ from accounts.views import CustomTokenObtainPairView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('accounts.urls')),
+    path('api/token/', CustomTokenObtainPairView.as_view()),
     path('api/auth/login/', CustomTokenObtainPairView.as_view()),
     path('api/auth/refresh/', TokenRefreshView.as_view()),
     path('api/', include('insurance.urls')),

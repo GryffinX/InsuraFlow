@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from accounts.permissions import IsCustomer, IsSurveyor, IsAdmin, IsProvider, IsAgent
+from accounts.permissions import IsCustomer, IsSurveyor, IsAdmin, IsProvider, IsAgent, IsVerifiedUser
 from .models import Claim, InspectionReport, Settlement
 from .serializers import ClaimSerializer, InspectionReportSerializer, SettlementSerializer
 
@@ -12,6 +12,11 @@ from .serializers import ClaimSerializer, InspectionReportSerializer, Settlement
 class ClaimViewSet(viewsets.ModelViewSet):
     serializer_class = ClaimSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'assign_surveyor', 'approve', 'reject']:
+            return [IsAuthenticated(), IsVerifiedUser()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
         user = self.request.user
@@ -80,7 +85,7 @@ class ClaimViewSet(viewsets.ModelViewSet):
 
 class InspectionReportViewSet(viewsets.ModelViewSet):
     serializer_class = InspectionReportSerializer
-    permission_classes = [IsAuthenticated, IsSurveyor | IsAdmin]
+    permission_classes = [IsAuthenticated, IsSurveyor | IsAdmin, IsVerifiedUser]
 
     def get_queryset(self):
         user = self.request.user
@@ -93,7 +98,7 @@ class InspectionReportViewSet(viewsets.ModelViewSet):
 
 class SettlementViewSet(viewsets.ModelViewSet):
     serializer_class = SettlementSerializer
-    permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated, IsAdmin, IsVerifiedUser]
 
     def get_queryset(self):
         return Settlement.objects.all()

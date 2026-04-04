@@ -3,7 +3,7 @@
 	import { Button, Input } from '$lib/components';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
-    import { ShieldCheck } from 'lucide-svelte';
+	import { ShieldCheck, Mail, Lock } from 'lucide-svelte';
 
 	let email = $state('');
 	let password = $state('');
@@ -12,13 +12,14 @@
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
 		isLoading = true;
+
 		try {
 			await auth.login({ email, password });
-			toast.success('Logged in successfully');
+			toast.success('Welcome back!');
 			goto('/dashboard');
 		} catch (error: any) {
-			const errorData = error.response?.data;
-			const message = errorData?.error || errorData?.details?.detail || 'Login failed';
+            console.error('Login error details:', error.response?.data);
+            const message = error.response?.data?.details || error.response?.data?.error || 'Login failed';
 			toast.error(message);
 		} finally {
 			isLoading = false;
@@ -26,42 +27,44 @@
 	}
 </script>
 
-<div class="min-h-[calc(100vh-64px)] flex items-center justify-center p-4">
-	<div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200 p-8 space-y-8">
-		<div class="text-center space-y-2">
-			<div class="inline-flex items-center justify-center p-3 bg-indigo-50 rounded-2xl mb-2">
+<div class="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12">
+	<div class="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl border border-slate-200 shadow-xl">
+		<div class="text-center">
+			<div class="bg-indigo-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
 				<ShieldCheck class="w-8 h-8 text-indigo-600" />
 			</div>
-			<h1 class="text-3xl font-bold text-slate-900 tracking-tight">Welcome back</h1>
-			<p class="text-slate-500">Log in to manage your insurance and claims</p>
+			<h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Sign in to your account</h2>
+			<p class="mt-2 text-slate-500">Welcome back to InsuraFlow.</p>
 		</div>
 
-		<form onsubmit={handleSubmit} class="space-y-6">
-			<Input
-				label="Email Address"
-				type="email"
-				id="email"
-				placeholder="name@example.com"
-				required
-				bind:value={email}
-			/>
-			<div class="space-y-1">
+		<form class="mt-8 space-y-6" onsubmit={handleSubmit}>
+			<div class="space-y-4">
 				<Input
-					label="Password"
-					type="password"
-					id="password"
-					placeholder="••••••••"
+					label="Email address"
+					type="email"
+					placeholder="name@example.com"
 					required
-					bind:value={password}
+					bind:value={email}
 				/>
-				<div class="flex justify-end">
-					<a href="/forgot-password" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-						Forgot password?
-					</a>
+				<div class="space-y-1">
+					<Input
+						label="Password"
+						type="password"
+						placeholder="••••••••"
+						required
+						bind:value={password}
+					/>
+				</div>
+
+				<div class="flex items-center justify-between">
+					<label class="flex items-center">
+						<input type="checkbox" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500" />
+						<span class="ml-2 text-sm text-slate-600 font-medium">Remember me</span>
+					</label>
 				</div>
 			</div>
 
-			<Button type="submit" class="w-full h-11" loading={isLoading}>
+			<Button type="submit" class="w-full h-12 text-lg font-bold" loading={isLoading}>
 				Sign in
 			</Button>
 

@@ -13,10 +13,14 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(str(BASE_DIR/".env.local"), override=True)
-load_dotenv(str(BASE_DIR.parent/".env"), override=False)
+
+# Explicitly load .env from the same directory as manage.py
+ENV_PATH = BASE_DIR / ".env"
+if ENV_PATH.exists():
+    load_dotenv(ENV_PATH, override=True)
 
 
 # Quick-start development settings - unsuitable for production
@@ -94,15 +98,15 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv("DB_NAME"),
-            'USER': os.getenv("DB_USER"),
-            'PASSWORD': os.getenv("DB_PASS"),
-            'HOST': os.getenv("DB_HOST"),
-            'PORT': os.getenv("DB_PORT"),
-        }
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv("DB_NAME"),
+        'USER': os.getenv("DB_USER"),
+        'PASSWORD': os.getenv("DB_PASS"),
+        'HOST': os.getenv("DB_HOST", "localhost"),
+        'PORT': os.getenv("DB_PORT", "5432"),
     }
+}
 
 
 # Password validation
@@ -186,17 +190,13 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
 
 
-# Email Configuration
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST = os.getenv('EMAIL_HOST', '')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ['true', '1']
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'no-reply@insuraflow.com')
+# Secret keys for registering special roles
+ADMIN_SECRET_KEY = os.getenv("ADMIN_SECRET_KEY", "admin-secret-2026")
+AGENT_SECRET_KEY = os.getenv("AGENT_SECRET_KEY", "agent-secret-2026")
+PROVIDER_SECRET_KEY = os.getenv("PROVIDER_SECRET_KEY", "provider-secret-2026")
+SURVEYOR_SECRET_KEY = os.getenv("SURVEYOR_SECRET_KEY", "surveyor-secret-2026")
 
-# Secret key for registering special roles (admin, surveyor)
-REGISTER_SECRET_KEY = os.getenv("REGISTER_SECRET_KEY", "insuraflow-secret-2026")
+REGISTER_SECRET_KEY = os.getenv("REGISTER_SECRET_KEY", "insuraflow-secret-2026") # Fallback or shared
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 LOGGING = {

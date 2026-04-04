@@ -1,17 +1,25 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
 
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
+        # standard validation first
         data = super().validate(attrs)
-        if not self.user.is_verified:
-             raise serializers.ValidationError("Email is not verified. Please verify your email first.")
+        
+        # self.user is set by super().validate() if successful
+        if not self.user:
+            raise serializers.ValidationError("Invalid credentials")
+            
         return data
+
+class UserSerializerSimple(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email']
 
 class UserSerializer(serializers.ModelSerializer):
     formatted_id = serializers.SerializerMethodField()
@@ -29,6 +37,7 @@ class UserSerializer(serializers.ModelSerializer):
             'is_verified',
             'formatted_id',
         ]
+        read_only_fields = ['is_verified']
 
     def get_formatted_id(self, obj):
         prefix = {
@@ -41,7 +50,6 @@ class UserSerializer(serializers.ModelSerializer):
         return f"{prefix}-{obj.id}"
 
 class RegisterSerializer(serializers.ModelSerializer):
-    
     password = serializers.CharField(write_only=True, validators=[validate_password])
     secret_key = serializers.CharField(write_only=True, required=False, allow_blank=True)
     
@@ -53,9 +61,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             "email",
             "password",
             "role",
-            "phone",
-            "address",
-            "dob",
             "secret_key",
         ]
 
@@ -64,9 +69,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         secret_key = attrs.get('secret_key')
         
         from django.conf import settings
-        if role in ['admin', 'surveyor']:
-            if secret_key != settings.REGISTER_SECRET_KEY:
-                raise serializers.ValidationError({"secret_key": f"A valid secret key is required to register as {role}."})
+        if role != 'customer':
+            expected_key = {
+                'admin': settings.ADMIN_SECRET_KEY,
+                'agent': settings.AGENT_SECRET_KEY,
+                'provider': settings.PROVIDER_SECRET_KEY,
+                'surveyor': settings.SURVEYOR_SECRET_KEY,
+            }.get(role)
+            
+            if not secret_key or secret_key != expected_key:
+                raise serializers.ValidationError({"secret_key": "Invalid or missing secret key for this role."})
         
         return attrs
 
@@ -82,9 +94,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             elif user.role == 'agent':
                 Agent.objects.get_or_create(user=user, defaults={'name': user.username, 'email': user.email})
             elif user.role == 'surveyor':
-                Surveyor.objects.get_or_create(user=user, defaults={'name': user.username, 'email': user.email, 'license_no': f"LNC-{user.id}"})
+                Surveyor.objects.get_or_create(user=user, defaults={'name': user.username, 'email': user.email, 'license_no': f"LNC-{user.id}", 'region': 'Unassigned'})
         except Exception as e:
-            print(f"Error creating profile: {e}")
+            # Profile creation should not block user registration
+            pass
             
         return user
-
