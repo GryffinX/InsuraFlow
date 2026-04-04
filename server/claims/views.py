@@ -1,7 +1,8 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 
 from accounts.permissions import IsCustomer, IsSurveyor, IsAdmin, IsProvider, IsAgent, IsVerifiedUser
 from .models import Claim, InspectionReport, Settlement
@@ -12,6 +13,24 @@ from .serializers import ClaimSerializer, InspectionReportSerializer, Settlement
 class ClaimViewSet(viewsets.ModelViewSet):
     serializer_class = ClaimSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = [
+        '=id',
+        '=user_policy__policy_number',
+        'status',
+        'claim_reason',
+        'user__username',
+        'user__email',
+        'assigned_surveyor__username',
+        'assigned_surveyor__email',
+    ]
+    filterset_fields = {
+        'status': ['exact'],
+        'claim_date': ['exact', 'gte', 'lte'],
+        'claim_amount': ['exact', 'gte', 'lte'],
+        'assigned_surveyor': ['exact', 'isnull'],
+    }
+    ordering_fields = ['claim_date', 'claim_amount', 'status', 'id']
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy', 'assign_surveyor', 'approve', 'reject']:

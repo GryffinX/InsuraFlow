@@ -9,11 +9,54 @@
 	let claims = $state<any[]>([]);
 	let isLoading = $state(true);
 	let searchQuery = $state('');
+	let selectedStatus = $state('all');
+	let selectedDateRange = $state('all');
+	let sortBy = $state('-claim_date');
+	let showFilters = $state(false);
 	
 	let surveyors = $state<any[]>([]);
 	let showAssignModal = $state(false);
 	let selectedClaimId = $state<number | null>(null);
 	let selectedSurveyorId = $state('');
+
+	let debounceTimer: any;
+	const statusOptions = ['all', 'filed', 'under_review', 'approved', 'rejected', 'settled'];
+	const dateRangeOptions = ['all', 'today', 'last_7_days', 'last_30_days', 'this_year'];
+
+	function formatDateForApi(date: Date) {
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+		const day = String(date.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	}
+
+	function getDateRangeStart(range: string) {
+		const today = new Date();
+		const start = new Date(today);
+
+		switch (range) {
+			case 'today':
+				return formatDateForApi(today);
+			case 'last_7_days':
+				start.setDate(today.getDate() - 7);
+				return formatDateForApi(start);
+			case 'last_30_days':
+				start.setDate(today.getDate() - 30);
+				return formatDateForApi(start);
+			case 'this_year':
+				start.setMonth(0, 1);
+				return formatDateForApi(start);
+			default:
+				return null;
+		}
+	}
+
+	function handleSearch() {
+		clearTimeout(debounceTimer);
+		debounceTimer = setTimeout(() => {
+			fetchClaims();
+		}, 300);
+	}
 
 	onMount(async () => {
 		fetchClaims();
@@ -22,11 +65,17 @@
 	async function fetchClaims() {
 		isLoading = true;
 		try {
+			const params: Record<string, string | number> = {
+				ordering: sortBy,
+				limit: 100
+			};
+			if (searchQuery.trim()) params.search = searchQuery.trim();
+			if (selectedStatus !== 'all') params.status = selectedStatus;
+			const dateRangeStart = getDateRangeStart(selectedDateRange);
+			if (dateRangeStart) params.claim_date__gte = dateRangeStart;
+
 			const res = await api.get('claims/', {
-				params: { 
-					search: searchQuery,
-					limit: 100 
-				}
+				params
 			});
 			const data = res.data.results || (Array.isArray(res.data) ? res.data : []);
 			claims = data;
@@ -99,20 +148,76 @@
 	</div>
 
 	<!-- Search & Filters -->
-	<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 mb-8">
-		<div class="relative flex-grow">
-			<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-			<input
-				type="text"
-				placeholder="Search claims by ID, status..."
-				class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 transition-all sm:text-sm"
-				bind:value={searchQuery}
-				onchange={fetchClaims}
-			/>
+	<div class="space-y-4 mb-8">
+		<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center gap-4">
+			<div class="relative flex-grow">
+				<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+				<input
+					type="text"
+					placeholder="Search by claim ID, policy number, status, customer..."
+					class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+					bind:value={searchQuery}
+					oninput={handleSearch}
+				/>
+			</div>
+
+			<div class="flex gap-2">
+				<Button variant="outline" onclick={() => showFilters = !showFilters}>
+					<Filter class="w-4 h-4 mr-2" /> {showFilters ? 'Hide' : ''} Filters
+				</Button>
+
+				<select
+					bind:value={sortBy}
+					onchange={fetchClaims}
+					class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
+				>
+					<option value="-claim_date">Newest First</option>
+					<option value="claim_date">Oldest First</option>
+					<option value="-claim_amount">Amount: High to Low</option>
+					<option value="claim_amount">Amount: Low to High</option>
+				</select>
+			</div>
 		</div>
-		<Button variant="outline">
-			<Filter class="w-4 h-4 mr-2" /> Filters
-		</Button>
+
+		{#if showFilters}
+			<div class="bg-slate-100 p-6 rounded-2xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-2 duration-200">
+				<div class="space-y-2">
+					<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Claim Status</label>
+					<select
+						bind:value={selectedStatus}
+						onchange={fetchClaims}
+						class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+					>
+						{#each statusOptions as status}
+							<option value={status}>{status === 'all' ? 'All' : status.replace('_', ' ')}</option>
+						{/each}
+					</select>
+				</div>
+
+				<div class="space-y-2">
+					<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Claim Date</label>
+					<select
+						bind:value={selectedDateRange}
+						onchange={fetchClaims}
+						class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+					>
+						{#each dateRangeOptions as range}
+							<option value={range}>
+								{range === 'all'
+									? 'All Dates'
+									: range === 'today'
+										? 'Today'
+										: range === 'last_7_days'
+											? 'Last 7 Days'
+											: range === 'last_30_days'
+												? 'Last 30 Days'
+												: 'This Year'}
+							</option>
+						{/each}
+					</select>
+				</div>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Claims List with Scrollable Container -->
