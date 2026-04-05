@@ -27,7 +27,18 @@
 			toast.success('Account created! Sign in to continue.');
 			goto('/login');
 		} catch (error: any) {
-			const msg = error.response?.data?.secret_key || error.response?.data?.error || 'Registration failed';
+			const errorData = error.response?.data;
+			const details = errorData?.details;
+			const secretKeyError = errorData?.secret_key ?? details?.secret_key;
+			const passwordError = errorData?.password ?? details?.password;
+			const detailMessage = details?.detail;
+			const msg =
+				(Array.isArray(secretKeyError) ? secretKeyError[0] : secretKeyError) ||
+				(Array.isArray(passwordError) ? passwordError[0] : passwordError) ||
+				errorData?.detail ||
+				detailMessage ||
+				errorData?.error ||
+				'Registration failed';
 			toast.error(msg);
 		} finally {
 			isLoading = false;
@@ -79,15 +90,16 @@
 						class="input-field py-[14px]"
 					>
 						<option value="customer">Customer</option>
+						<option value="admin">Admin</option>
 						<option value="agent">Agent</option>
 						<option value="provider">Provider</option>
-                        <option value="surveyor">Surveyor</option>
+						<option value="surveyor">Surveyor</option>
 					</select>
 				</div>
 
 				{#if role !== 'customer'}
 					<Input
-						label="Organization Secret Key"
+						label="Privileged Role Secret Key"
 						type="password"
 						placeholder="Provided by InsuraFlow"
 						required

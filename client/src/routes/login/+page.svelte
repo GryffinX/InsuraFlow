@@ -18,10 +18,13 @@
 			toast.success('Welcome back to InsuraFlow');
 			goto('/dashboard');
 		} catch (error: any) {
-            const message =
-				error.response?.data?.detail ||
-				error.response?.data?.details ||
-				error.response?.data?.error ||
+			const errorData = error.response?.data;
+			const details = errorData?.details;
+			const message =
+				errorData?.detail ||
+				details?.detail ||
+				(typeof details === 'string' ? details : null) ||
+				errorData?.error ||
 				'Unable to sign in';
 			toast.error(message);
 		} finally {

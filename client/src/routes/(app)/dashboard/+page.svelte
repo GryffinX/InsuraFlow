@@ -119,7 +119,7 @@
                     </Button>
                 </a>
             {/if}
-            {#if role === 'provider' || role === 'agent'}
+            {#if role === 'provider' || role === 'admin'}
                 <a href="/policies/new">
                     <Button class="h-12 px-6">
                         <Plus class="w-5 h-5 mr-2" /> Create Policy
