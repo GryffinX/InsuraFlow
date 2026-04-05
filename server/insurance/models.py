@@ -53,6 +53,9 @@ class Policy(models.Model):
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name='policies', null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
+    class Meta:
+        ordering = ['id']
+
     def __str__(self):
         return self.title
 
