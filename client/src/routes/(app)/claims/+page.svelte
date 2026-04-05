@@ -28,7 +28,7 @@
 	let selectedSurveyorId = $state('');
 
 	let debounceTimer: any;
-	const statusOptions = ['all', 'filed', 'under_review', 'approved', 'rejected', 'settled'];
+	const statusOptions = ['all', 'filed', 'under_review', 'approved', 'rejected'];
 	const dateRangeOptions = ['all', 'today', 'last_7_days', 'last_30_days', 'this_year'];
 
 	function formatDateForApi(date: Date) {

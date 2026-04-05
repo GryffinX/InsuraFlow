@@ -132,3 +132,49 @@
 .animate-pulse-glow {
   animation: pulse-glow 3.6s ease-in-out infinite;
 }
+
+@keyframes toast-timer-drain {
+  0% {
+    transform: scaleX(1);
+    background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+  }
+
+  55% {
+    background: linear-gradient(90deg, #eab308 0%, #facc15 100%);
+  }
+
+  78% {
+    background: linear-gradient(90deg, #f59e0b 0%, #fb923c 100%);
+  }
+
+  100% {
+    transform: scaleX(0);
+    background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+  }
+}
+
+:global([data-sonner-toaster]) {
+  z-index: 80;
+}
+
+:global([data-sonner-toast].insuraflow-toast) {
+  overflow: hidden;
+  padding-bottom: 1rem;
+}
+
+:global([data-sonner-toast].insuraflow-toast::after) {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  transform-origin: left center;
+  animation: toast-timer-drain var(--toast-lifetime, 5000ms) linear forwards;
+}
+
+:global([data-sonner-toast].insuraflow-toast:hover::after),
+:global([data-sonner-toast].insuraflow-toast:focus-within::after),
+:global([data-sonner-toast].insuraflow-toast[data-expanded='true']::after) {
+  animation-play-state: paused;
+}

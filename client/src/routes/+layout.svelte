@@ -5,6 +5,7 @@
 	import { Toaster } from 'svelte-sonner';
 
 	let { children } = $props();
+	const TOAST_DURATION_MS = 5000;
 </script>
 
 <svelte:head>
@@ -18,5 +19,14 @@
 	<main class="flex-grow">
 		{@render children()}
 	</main>
-	<Toaster position="top-right" />
+	<Toaster
+		position="bottom-right"
+		offset="24px"
+		duration={TOAST_DURATION_MS}
+		closeButton
+		toastOptions={{
+			class: 'insuraflow-toast',
+			style: `--toast-lifetime: ${TOAST_DURATION_MS}ms;`
+		}}
+	/>
 </div>

@@ -67,12 +67,6 @@
 					bind:value={password}
 				/>
 
-				<div class="flex items-center justify-between px-1">
-					<label class="flex items-center group cursor-pointer">
-						<input type="checkbox" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 transition-all cursor-pointer" />
-						<span class="ml-2 text-sm text-slate-500 font-bold group-hover:text-slate-700 transition-colors">Remember me</span>
-					</label>
-				</div>
 			</div>
 
 			<Button type="submit" class="w-full h-14 text-lg" loading={isLoading}>
