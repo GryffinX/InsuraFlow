@@ -3,7 +3,10 @@
 	import { Button, Input } from '$lib/components';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
-	import { ShieldCheck, Mail, Lock, ArrowRight } from 'lucide-svelte';
+	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import Lock from 'lucide-svelte/icons/lock';
+	import Mail from 'lucide-svelte/icons/mail';
+	import ShieldCheck from 'lucide-svelte/icons/shield-check';
 
 	let email = $state('');
 	let password = $state('');

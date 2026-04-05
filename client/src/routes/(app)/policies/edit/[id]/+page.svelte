@@ -6,7 +6,8 @@
     import { goto } from '$app/navigation';
     import { Button, Input } from '$lib/components';
     import { toast } from 'svelte-sonner';
-    import { Save, ArrowLeft } from 'lucide-svelte';
+    import ArrowLeft from 'lucide-svelte/icons/arrow-left';
+    import Save from 'lucide-svelte/icons/save';
 
     const id = page.params.id;
     let formData = $state<any>(null);
@@ -77,8 +78,9 @@
                 <Input label="Policy Title" bind:value={formData.title} required />
                 
                 <div class="space-y-1">
-                    <label class="block text-sm font-medium text-slate-700">Description</label>
+                    <label for="edit-policy-description" class="block text-sm font-medium text-slate-700">Description</label>
                     <textarea 
+                        id="edit-policy-description"
                         class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none" 
                         rows="4"
                         bind:value={formData.description}
@@ -88,8 +90,9 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-1">
-                        <label class="block text-sm font-medium text-slate-700">Policy Type</label>
+                        <label for="edit-policy-type" class="block text-sm font-medium text-slate-700">Policy Type</label>
                         <select 
+                            id="edit-policy-type"
                             class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none"
                             bind:value={formData.policy_type}
                         >

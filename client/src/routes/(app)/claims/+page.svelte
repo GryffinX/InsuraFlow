@@ -2,7 +2,15 @@
 	import { api } from '$lib/api/axios';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { onMount } from 'svelte';
-	import { FileText, Plus, Search, Filter, AlertCircle, Clock, CheckCircle2, UserCheck, X } from 'lucide-svelte';
+	import AlertCircle from 'lucide-svelte/icons/alert-circle';
+	import CheckCircle2 from 'lucide-svelte/icons/check-circle-2';
+	import Clock from 'lucide-svelte/icons/clock';
+	import FileText from 'lucide-svelte/icons/file-text';
+	import Filter from 'lucide-svelte/icons/filter';
+	import Plus from 'lucide-svelte/icons/plus';
+	import Search from 'lucide-svelte/icons/search';
+	import UserCheck from 'lucide-svelte/icons/user-check';
+	import X from 'lucide-svelte/icons/x';
 	import { Button } from '$lib/components';
 	import { toast } from 'svelte-sonner';
 
@@ -182,8 +190,9 @@
 		{#if showFilters}
 			<div class="bg-slate-100 p-6 rounded-2xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-2 duration-200">
 				<div class="space-y-2">
-					<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Claim Status</label>
+					<label for="claim-status-filter" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Claim Status</label>
 					<select
+						id="claim-status-filter"
 						bind:value={selectedStatus}
 						onchange={fetchClaims}
 						class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
@@ -195,8 +204,9 @@
 				</div>
 
 				<div class="space-y-2">
-					<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Claim Date</label>
+					<label for="claim-date-filter" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Claim Date</label>
 					<select
+						id="claim-date-filter"
 						bind:value={selectedDateRange}
 						onchange={fetchClaims}
 						class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"

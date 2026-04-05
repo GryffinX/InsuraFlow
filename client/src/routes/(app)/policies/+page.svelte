@@ -2,7 +2,17 @@
 	import { api } from '$lib/api/axios';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { onMount } from 'svelte';
-	import { Shield, Search, Filter, ArrowUpDown, Check, ShoppingCart, X, Edit, Trash2, Users, Plus } from 'lucide-svelte';
+	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
+	import Check from 'lucide-svelte/icons/check';
+	import Edit from 'lucide-svelte/icons/edit';
+	import Filter from 'lucide-svelte/icons/filter';
+	import Plus from 'lucide-svelte/icons/plus';
+	import Search from 'lucide-svelte/icons/search';
+	import Shield from 'lucide-svelte/icons/shield';
+	import ShoppingCart from 'lucide-svelte/icons/shopping-cart';
+	import Trash2 from 'lucide-svelte/icons/trash-2';
+	import Users from 'lucide-svelte/icons/users';
+	import X from 'lucide-svelte/icons/x';
 	import { Button } from '$lib/components';
 	import { toast } from 'svelte-sonner';
 
@@ -162,8 +172,9 @@
 		{#if showFilters}
 			<div class="bg-slate-100 p-6 rounded-2xl border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-top-2 duration-200">
 				<div class="space-y-2">
-					<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Policy Type</label>
+					<label for="policy-type-filter" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Policy Type</label>
 					<select 
+						id="policy-type-filter"
 						bind:value={selectedType} 
 						onchange={fetchPolicies}
 						class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
@@ -174,8 +185,9 @@
 					</select>
 				</div>
 				<div class="space-y-2">
-					<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Min Premium ($)</label>
+					<label for="min-premium-filter" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Min Premium ($)</label>
 					<input 
+						id="min-premium-filter"
 						type="number" 
 						bind:value={minPrice} 
 						oninput={handleSearch}
@@ -184,8 +196,9 @@
 					/>
 				</div>
 				<div class="space-y-2">
-					<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Max Premium ($)</label>
+					<label for="max-premium-filter" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Max Premium ($)</label>
 					<input 
+						id="max-premium-filter"
 						type="number" 
 						bind:value={maxPrice} 
 						oninput={handleSearch}

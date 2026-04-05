@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlparse
 
 import dj_database_url
 from dotenv import load_dotenv
@@ -64,6 +64,31 @@ def build_local_database_url():
     return f"postgresql://{auth_part}@{host}:{port}/{name}"
 
 
+def is_render_internal_database_url(value):
+    if not value:
+        return False
+
+    try:
+        hostname = urlparse(value).hostname or ""
+    except Exception:
+        return False
+
+    # Render internal Postgres hostnames are private and not reachable from a local machine.
+    return hostname.startswith("dpg-") and "." not in hostname
+
+
+def should_require_db_ssl(value):
+    if not value:
+        return False
+
+    try:
+        hostname = (urlparse(value).hostname or "").lower()
+    except Exception:
+        return False
+
+    return hostname not in {"localhost", "127.0.0.1", "::1"}
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
@@ -76,6 +101,10 @@ DEBUG = is_truthy(os.getenv("DEBUG", "False"))
 ALLOWED_HOSTS = get_env_list("ALLOWED_HOSTS", ["*"])
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+IS_RENDER = is_truthy(os.getenv("RENDER", "")) or bool(RENDER_EXTERNAL_HOSTNAME)
+ENABLE_HTTPS_SECURITY = is_truthy(
+    os.getenv("ENABLE_HTTPS_SECURITY", "True" if IS_RENDER else "False")
+)
 
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS = unique([*ALLOWED_HOSTS, RENDER_EXTERNAL_HOSTNAME])
@@ -84,7 +113,7 @@ else:
     render_origin = None
 
 # Security Settings (enable when using HTTPS in production)
-if not DEBUG:
+if ENABLE_HTTPS_SECURITY:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
@@ -147,14 +176,24 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-database_url = os.getenv("DATABASE_URL") or build_local_database_url()
+database_url = os.getenv("DATABASE_URL")
+
+if (
+    database_url
+    and is_render_internal_database_url(database_url)
+    and not os.getenv("RENDER")
+    and not os.getenv("RENDER_EXTERNAL_HOSTNAME")
+):
+    database_url = None
+
+database_url = database_url or build_local_database_url()
 
 if database_url:
     DATABASES = {
         'default': dj_database_url.parse(
             database_url,
             conn_max_age=600,
-            ssl_require=not DEBUG
+            ssl_require=should_require_db_ssl(database_url)
         )
     }
 else:

@@ -3,7 +3,13 @@
     import { api } from '$lib/api/axios';
     import { Button, Input } from '$lib/components';
     import { toast } from 'svelte-sonner';
-    import { User, Mail, Phone, MapPin, Calendar, Lock, Save } from 'lucide-svelte';
+    import Calendar from 'lucide-svelte/icons/calendar';
+    import Lock from 'lucide-svelte/icons/lock';
+    import Mail from 'lucide-svelte/icons/mail';
+    import MapPin from 'lucide-svelte/icons/map-pin';
+    import Phone from 'lucide-svelte/icons/phone';
+    import Save from 'lucide-svelte/icons/save';
+    import User from 'lucide-svelte/icons/user';
 
     let user = $state({ ...auth.user });
     let isSubmitting = $state(false);
@@ -84,8 +90,9 @@
                         <Input label="Date of Birth" type="date" bind:value={user.dob} />
                     </div>
                     <div class="space-y-1">
-                        <label class="block text-sm font-medium text-slate-700">Address</label>
+                        <label for="profile-address" class="block text-sm font-medium text-slate-700">Address</label>
                         <textarea 
+                            id="profile-address"
                             class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none" 
                             rows="3"
                             bind:value={user.address}

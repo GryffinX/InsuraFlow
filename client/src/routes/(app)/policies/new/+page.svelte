@@ -5,7 +5,7 @@
     import { goto } from '$app/navigation';
     import { Button, Input } from '$lib/components';
     import { toast } from 'svelte-sonner';
-    import { ArrowLeft } from 'lucide-svelte';
+    import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 
     let formData = $state({
         title: '',
@@ -61,8 +61,9 @@
             />
             
             <div class="space-y-1">
-                <label class="block text-sm font-medium text-slate-700">Description</label>
+                <label for="new-policy-description" class="block text-sm font-medium text-slate-700">Description</label>
                 <textarea 
+                    id="new-policy-description"
                     class="block w-full rounded-xl border-slate-200 bg-slate-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-all border p-4 outline-none" 
                     rows="4"
                     placeholder="Describe the coverage and benefits..."
@@ -73,8 +74,9 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-1">
-                    <label class="block text-sm font-medium text-slate-700">Policy Type</label>
+                    <label for="new-policy-type" class="block text-sm font-medium text-slate-700">Policy Type</label>
                     <select 
+                        id="new-policy-type"
                         class="block w-full rounded-xl border-slate-200 bg-slate-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-all border p-3 outline-none font-medium"
                         bind:value={formData.policy_type}
                     >

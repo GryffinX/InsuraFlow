@@ -2,16 +2,14 @@
 	import { auth } from '$lib/stores/auth.svelte';
 	import { api } from '$lib/api/axios';
 	import { Button } from '$lib/components';
-	import {
-		ArrowRight,
-		BadgeCheck,
-		Globe,
-		Lock,
-		Shield,
-		ShieldCheck,
-		Sparkles,
-		Zap
-	} from 'lucide-svelte';
+	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import BadgeCheck from 'lucide-svelte/icons/badge-check';
+	import Globe from 'lucide-svelte/icons/globe';
+	import Lock from 'lucide-svelte/icons/lock';
+	import Shield from 'lucide-svelte/icons/shield';
+	import ShieldCheck from 'lucide-svelte/icons/shield-check';
+	import Sparkles from 'lucide-svelte/icons/sparkles';
+	import Zap from 'lucide-svelte/icons/zap';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';

@@ -2,7 +2,16 @@
 	import { auth } from '$lib/stores/auth.svelte';
 	import { api } from '$lib/api/axios';
 	import { onMount } from 'svelte';
-	import { Shield, FileText, Clock, CheckCircle, AlertCircle, ArrowRight, Users, Briefcase, Activity, Plus } from 'lucide-svelte';
+	import Activity from 'lucide-svelte/icons/activity';
+	import AlertCircle from 'lucide-svelte/icons/alert-circle';
+	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import Briefcase from 'lucide-svelte/icons/briefcase';
+	import CheckCircle from 'lucide-svelte/icons/check-circle';
+	import Clock from 'lucide-svelte/icons/clock';
+	import FileText from 'lucide-svelte/icons/file-text';
+	import Plus from 'lucide-svelte/icons/plus';
+	import Shield from 'lucide-svelte/icons/shield';
+	import Users from 'lucide-svelte/icons/users';
 	import { Button } from '$lib/components';
 
 	let stats = $state({

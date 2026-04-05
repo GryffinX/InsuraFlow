@@ -4,7 +4,11 @@
     import { goto } from '$app/navigation';
     import { Button, Input } from '$lib/components';
     import { toast } from 'svelte-sonner';
-    import { FileText, ArrowLeft, Shield, Building, Tag } from 'lucide-svelte';
+    import ArrowLeft from 'lucide-svelte/icons/arrow-left';
+    import Building from 'lucide-svelte/icons/building';
+    import FileText from 'lucide-svelte/icons/file-text';
+    import Shield from 'lucide-svelte/icons/shield';
+    import Tag from 'lucide-svelte/icons/tag';
 
     let userPolicies = $state<any[]>([]);
     let serviceProviders = $state<any[]>([]);

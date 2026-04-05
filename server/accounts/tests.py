@@ -38,6 +38,33 @@ class AuthTests(TestCase):
         self.assertIn("error", response.data)
         self.assertEqual(response.data["error"], "Validation Error")
 
+    def test_admin_registration_success_with_secret_key(self):
+        data = {
+            "username": "adminuser",
+            "email": "admin@example.com",
+            "password": "Password123!",
+            "role": "admin",
+            "secret_key": "admin-secret-2026",
+        }
+        response = self.client.post(self.register_url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        user = User.objects.get(email="admin@example.com")
+        self.assertEqual(user.role, "admin")
+        self.assertTrue(user.is_verified)
+
+    def test_admin_registration_rejects_invalid_secret_key(self):
+        data = {
+            "username": "badadmin",
+            "email": "badadmin@example.com",
+            "password": "Password123!",
+            "role": "admin",
+            "secret_key": "wrong-secret",
+        }
+        response = self.client.post(self.register_url, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("details", response.data)
+        self.assertIn("secret_key", response.data["details"])
+
     def test_login_success(self):
         User.objects.create_user(
             username="testuser",

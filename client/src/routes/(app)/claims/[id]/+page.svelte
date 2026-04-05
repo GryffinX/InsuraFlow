@@ -5,7 +5,17 @@
     import { onMount } from 'svelte';
     import { Button } from '$lib/components';
     import { toast } from 'svelte-sonner';
-    import { FileText, ArrowLeft, Clock, CheckCircle2, AlertCircle, Calendar, DollarSign, User, Shield, Check, X } from 'lucide-svelte';
+    import AlertCircle from 'lucide-svelte/icons/alert-circle';
+    import ArrowLeft from 'lucide-svelte/icons/arrow-left';
+    import Calendar from 'lucide-svelte/icons/calendar';
+    import Check from 'lucide-svelte/icons/check';
+    import CheckCircle2 from 'lucide-svelte/icons/check-circle-2';
+    import Clock from 'lucide-svelte/icons/clock';
+    import DollarSign from 'lucide-svelte/icons/dollar-sign';
+    import FileText from 'lucide-svelte/icons/file-text';
+    import Shield from 'lucide-svelte/icons/shield';
+    import User from 'lucide-svelte/icons/user';
+    import X from 'lucide-svelte/icons/x';
 
     const id = page.params.id;
     let claim = $state<any>(null);

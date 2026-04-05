@@ -4,7 +4,16 @@
     import { onMount } from 'svelte';
     import { Button, Input } from '$lib/components';
     import { toast } from 'svelte-sonner';
-    import { Users, Search, Shield, Mail, Phone, Calendar, Filter, CheckCircle, XCircle, Clock, X } from 'lucide-svelte';
+    import CheckCircle from 'lucide-svelte/icons/check-circle';
+    import Clock from 'lucide-svelte/icons/clock';
+    import Filter from 'lucide-svelte/icons/filter';
+    import Mail from 'lucide-svelte/icons/mail';
+    import Phone from 'lucide-svelte/icons/phone';
+    import Search from 'lucide-svelte/icons/search';
+    import Shield from 'lucide-svelte/icons/shield';
+    import Users from 'lucide-svelte/icons/users';
+    import X from 'lucide-svelte/icons/x';
+    import XCircle from 'lucide-svelte/icons/x-circle';
 
     let users = $state<any[]>([]);
     let isLoading = $state(true);
@@ -108,8 +117,9 @@
         {#if showFilters}
             <div class="bg-slate-100 p-6 rounded-2xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-2 duration-200">
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Filter by Role</label>
+                    <label for="users-role-filter" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Filter by Role</label>
                     <select 
+                        id="users-role-filter"
                         bind:value={selectedRole} 
                         onchange={fetchUsers}
                         class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
@@ -120,8 +130,9 @@
                     </select>
                 </div>
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Verification Status</label>
+                    <label for="users-status-filter" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Verification Status</label>
                     <select 
+                        id="users-status-filter"
                         bind:value={selectedStatus} 
                         onchange={fetchUsers}
                         class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"

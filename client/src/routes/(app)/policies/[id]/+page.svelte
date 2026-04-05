@@ -5,7 +5,14 @@
     import { onMount } from 'svelte';
     import { Button } from '$lib/components';
     import { toast } from 'svelte-sonner';
-    import { Shield, Check, ShoppingCart, ArrowLeft, Building, Calendar, DollarSign, Info } from 'lucide-svelte';
+    import ArrowLeft from 'lucide-svelte/icons/arrow-left';
+    import Building from 'lucide-svelte/icons/building';
+    import Calendar from 'lucide-svelte/icons/calendar';
+    import Check from 'lucide-svelte/icons/check';
+    import DollarSign from 'lucide-svelte/icons/dollar-sign';
+    import Info from 'lucide-svelte/icons/info';
+    import Shield from 'lucide-svelte/icons/shield';
+    import ShoppingCart from 'lucide-svelte/icons/shopping-cart';
 
     const id = page.params.id;
     let policy = $state<any>(null);

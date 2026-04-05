@@ -6,7 +6,11 @@
     import { goto } from '$app/navigation';
     import { Button } from '$lib/components';
     import { toast } from 'svelte-sonner';
-    import { Shield, ArrowLeft, Calendar, DollarSign, Building } from 'lucide-svelte';
+    import ArrowLeft from 'lucide-svelte/icons/arrow-left';
+    import Building from 'lucide-svelte/icons/building';
+    import Calendar from 'lucide-svelte/icons/calendar';
+    import DollarSign from 'lucide-svelte/icons/dollar-sign';
+    import Shield from 'lucide-svelte/icons/shield';
 
     let policyId = page.url.searchParams.get('id');
     let policy = $state<any>(null);

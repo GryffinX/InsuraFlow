@@ -1,7 +1,11 @@
-<script lang="ts">
+	<script lang="ts">
 	import { auth } from '$lib/stores/auth.svelte';
 	import { Button } from '$lib/components';
-	import { LogOut, User, Menu, X, ShieldCheck } from 'lucide-svelte';
+	import LogOut from 'lucide-svelte/icons/log-out';
+	import Menu from 'lucide-svelte/icons/menu';
+	import ShieldCheck from 'lucide-svelte/icons/shield-check';
+	import User from 'lucide-svelte/icons/user';
+	import X from 'lucide-svelte/icons/x';
 	import { cn } from '$lib/utils';
 	import { page } from '$app/state';
 

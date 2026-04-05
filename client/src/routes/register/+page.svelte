@@ -3,7 +3,11 @@
 	import { Button, Input } from '$lib/components';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
-	import { ShieldCheck, User, Mail, Lock, Sparkles } from 'lucide-svelte';
+	import Lock from 'lucide-svelte/icons/lock';
+	import Mail from 'lucide-svelte/icons/mail';
+	import ShieldCheck from 'lucide-svelte/icons/shield-check';
+	import Sparkles from 'lucide-svelte/icons/sparkles';
+	import User from 'lucide-svelte/icons/user';
 
 	let username = $state('');
 	let email = $state('');
@@ -11,6 +15,22 @@
 	let role = $state('customer');
 	let secretKey = $state('');
 	let isLoading = $state(false);
+
+	function getFirstErrorMessage(value: unknown): string | null {
+		if (!value) return null;
+		if (typeof value === 'string') return value;
+		if (Array.isArray(value)) {
+			const first = value.find(Boolean);
+			return typeof first === 'string' ? first : null;
+		}
+		if (typeof value === 'object') {
+			for (const nestedValue of Object.values(value as Record<string, unknown>)) {
+				const message = getFirstErrorMessage(nestedValue);
+				if (message) return message;
+			}
+		}
+		return null;
+	}
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
@@ -29,14 +49,14 @@
 		} catch (error: any) {
 			const errorData = error.response?.data;
 			const details = errorData?.details;
-			const secretKeyError = errorData?.secret_key ?? details?.secret_key;
-			const passwordError = errorData?.password ?? details?.password;
-			const detailMessage = details?.detail;
 			const msg =
-				(Array.isArray(secretKeyError) ? secretKeyError[0] : secretKeyError) ||
-				(Array.isArray(passwordError) ? passwordError[0] : passwordError) ||
+				getFirstErrorMessage(errorData?.secret_key ?? details?.secret_key) ||
+				getFirstErrorMessage(errorData?.password ?? details?.password) ||
+				getFirstErrorMessage(errorData?.email ?? details?.email) ||
+				getFirstErrorMessage(errorData?.username ?? details?.username) ||
 				errorData?.detail ||
-				detailMessage ||
+				getFirstErrorMessage(details?.detail) ||
+				getFirstErrorMessage(details) ||
 				errorData?.error ||
 				'Registration failed';
 			toast.error(msg);
@@ -84,8 +104,9 @@
 				/>
 
 				<div class="space-y-2">
-					<label class="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Account Type</label>
+					<label for="register-role" class="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Account Type</label>
 					<select
+						id="register-role"
 						bind:value={role}
 						class="input-field py-[14px]"
 					>
