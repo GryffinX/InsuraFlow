@@ -56,65 +56,69 @@
 </script>
 
 <div class="max-w-3xl mx-auto px-4 py-12">
-    <div class="mb-8 flex items-center gap-4">
-        <button onclick={() => history.back()} class="p-2 hover:bg-slate-100 rounded-full transition-colors">
-            <ArrowLeft class="w-6 h-6 text-slate-600" />
+    <div class="mb-10 flex items-center gap-6 animate-fade-in">
+        <button onclick={() => history.back()} class="p-3 hover:bg-white/10 rounded-2xl transition-all group border border-white/5 hover:border-violet-500/30">
+            <ArrowLeft class="w-6 h-6 text-slate-400 group-hover:text-violet-200" />
         </button>
-        <h1 class="text-3xl font-bold text-slate-900">Edit Policy</h1>
+        <h1 class="text-4xl font-black text-slate-50 tracking-tight">Edit Policy</h1>
     </div>
 
     {#if isLoading}
-        <div class="bg-white rounded-3xl p-8 border border-slate-200 animate-pulse space-y-6">
-            <div class="h-10 bg-slate-100 rounded w-1/2"></div>
-            <div class="h-32 bg-slate-50 rounded"></div>
-            <div class="grid grid-cols-2 gap-6">
-                <div class="h-10 bg-slate-50 rounded"></div>
-                <div class="h-10 bg-slate-50 rounded"></div>
+        <div class="dashboard-card p-10 animate-pulse space-y-8">
+            <div class="h-14 bg-white/5 rounded-2xl w-1/2"></div>
+            <div class="h-40 bg-white/5 rounded-2xl"></div>
+            <div class="grid grid-cols-2 gap-8">
+                <div class="h-14 bg-white/5 rounded-2xl"></div>
+                <div class="h-14 bg-white/5 rounded-2xl"></div>
             </div>
         </div>
     {:else if formData}
-        <form onsubmit={handleSubmit} class="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden p-8 space-y-8">
-            <div class="space-y-6">
-                <Input label="Policy Title" bind:value={formData.title} required />
+        <form onsubmit={handleSubmit} class="dashboard-card p-10 space-y-10 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-violet-600/5 blur-[100px] -z-10 rounded-full"></div>
+            
+            <div class="space-y-8">
+                <Input label="Policy Title" bind:value={formData.title} required class="bg-white/[0.03] border-white/10 text-slate-50 h-14 rounded-2xl" />
                 
-                <div class="space-y-1">
-                    <label for="edit-policy-description" class="block text-sm font-medium text-slate-700">Description</label>
+                <div class="space-y-2">
+                    <label for="edit-policy-description" class="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Description</label>
                     <textarea 
                         id="edit-policy-description"
-                        class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none" 
+                        class="block w-full rounded-2xl border-white/10 bg-white/[0.03] text-slate-50 shadow-sm focus:border-violet-500/50 focus:ring-0 sm:text-sm transition-all border p-5 outline-none placeholder:text-slate-600 min-h-[140px]" 
                         rows="4"
                         bind:value={formData.description}
                         required
                     ></textarea>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-1">
-                        <label for="edit-policy-type" class="block text-sm font-medium text-slate-700">Policy Type</label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-2">
+                        <label for="edit-policy-type" class="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Policy Type</label>
                         <select 
                             id="edit-policy-type"
-                            class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors border p-2 outline-none"
+                            class="block w-full rounded-2xl border-white/10 bg-white/[0.03] text-slate-50 shadow-sm focus:border-violet-500/50 focus:ring-0 sm:text-sm transition-all border p-4 outline-none font-bold h-14 appearance-none cursor-pointer"
                             bind:value={formData.policy_type}
                         >
-                            <option value="health">Health</option>
-                            <option value="motor">Motor</option>
-                            <option value="life">Life</option>
-                            <option value="travel">Travel</option>
+                            <option value="health" class="bg-[#0b0a24]">Health</option>
+                            <option value="motor" class="bg-[#0b0a24]">Motor</option>
+                            <option value="life" class="bg-[#0b0a24]">Life</option>
+                            <option value="travel" class="bg-[#0b0a24]">Travel</option>
                         </select>
                     </div>
-                    <Input label="Coverage Amount ($)" type="number" bind:value={formData.coverage_amount} required />
-                    <Input label="Annual Premium ($)" type="number" bind:value={formData.premium_amount} required />
+                    <Input label="Coverage Amount ($)" type="number" bind:value={formData.coverage_amount} required class="bg-white/[0.03] border-white/10 text-slate-50 h-14 rounded-2xl" />
+                    <Input label="Annual Premium ($)" type="number" bind:value={formData.premium_amount} required class="bg-white/[0.03] border-white/10 text-slate-50 h-14 rounded-2xl" />
                     
-                    <div class="flex items-center gap-2 pt-8">
-                        <input type="checkbox" id="is_active" bind:checked={formData.is_active} class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500" />
-                        <label for="is_active" class="text-sm font-medium text-slate-700">Active and Available for Sale</label>
+                    <div class="flex items-center gap-4 pt-4 ml-1">
+                        <div class="relative flex items-center">
+                            <input type="checkbox" id="is_active" bind:checked={formData.is_active} class="w-5 h-5 bg-white/5 border-white/10 rounded-lg text-violet-600 focus:ring-violet-500/50 focus:ring-offset-0 transition-all cursor-pointer" />
+                        </div>
+                        <label for="is_active" class="text-sm font-bold text-slate-300 cursor-pointer select-none">Active and Available for Sale</label>
                     </div>
                 </div>
             </div>
 
-            <div class="pt-6 border-t border-slate-100 flex justify-end gap-4">
-                <Button variant="outline" type="button" onclick={() => history.back()}>Cancel</Button>
-                <Button type="submit" loading={isSubmitting} class="px-8">
+            <div class="pt-8 border-t border-white/8 flex justify-end gap-6">
+                <Button variant="outline" type="button" onclick={() => history.back()} class="px-8 h-12 rounded-xl font-bold border-white/10 hover:bg-white/5 text-slate-300">Cancel</Button>
+                <Button type="submit" loading={isSubmitting} class="px-10 h-12 rounded-xl font-black shadow-[0_12px_40px_rgba(124,58,237,0.25)]">
                     <Save class="w-4 h-4 mr-2" /> Save Changes
                 </Button>
             </div>
