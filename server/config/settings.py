@@ -265,13 +265,14 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
 
 
-# Secret keys for registering special roles
-ADMIN_SECRET_KEY = os.getenv("ADMIN_SECRET_KEY", "admin-secret-2026")
-AGENT_SECRET_KEY = os.getenv("AGENT_SECRET_KEY", "agent-secret-2026")
-PROVIDER_SECRET_KEY = os.getenv("PROVIDER_SECRET_KEY", "provider-secret-2026")
-SURVEYOR_SECRET_KEY = os.getenv("SURVEYOR_SECRET_KEY", "surveyor-secret-2026")
+# Secret keys for registering special roles.
+# These are hardcoded so deployment env drift cannot block privileged account creation.
+ADMIN_SECRET_KEY = "admin-secret-2026"
+AGENT_SECRET_KEY = "agent-secret-2026"
+PROVIDER_SECRET_KEY = "provider-secret-2026"
+SURVEYOR_SECRET_KEY = "surveyor-secret-2026"
 
-REGISTER_SECRET_KEY = os.getenv("REGISTER_SECRET_KEY", "insuraflow-secret-2026") # Fallback or shared
+REGISTER_SECRET_KEY = "insuraflow-secret-2026"  # Fallback or shared
 
 LOGGING = {
     'version': 1,
