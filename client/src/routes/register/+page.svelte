@@ -66,18 +66,19 @@
 	}
 </script>
 
-<div class="min-h-[calc(100vh-80px)] flex items-center justify-center p-4 relative overflow-hidden">
+<div class="relative flex min-h-[calc(100vh-80px)] items-center justify-center overflow-hidden p-4">
     <!-- Abstract background shapes -->
-    <div class="absolute top-0 right-0 w-96 h-96 bg-indigo-100 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 opacity-50"></div>
-    <div class="absolute bottom-0 left-0 w-96 h-96 bg-emerald-50 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2 opacity-50"></div>
+    <div class="absolute right-0 top-0 h-96 w-96 translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-500/18 blur-3xl"></div>
+    <div class="absolute bottom-0 left-0 h-96 w-96 -translate-x-1/2 translate-y-1/2 rounded-full bg-emerald-400/10 blur-3xl"></div>
+	<div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.08),transparent_30%),linear-gradient(180deg,rgba(18,18,44,0.92),rgba(8,11,26,0.96))]"></div>
 
-	<div class="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl border border-slate-200 shadow-2xl relative z-10 animate-fade-in">
+	<div class="glass-card relative z-10 w-full max-w-md space-y-8 rounded-3xl border border-white/10 p-10 shadow-[0_30px_90px_rgba(2,6,23,0.45)] animate-fade-in">
 		<div class="text-center">
-			<div class="bg-indigo-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
-				<Sparkles class="w-8 h-8 text-indigo-600" />
+			<div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/22 to-fuchsia-500/16 shadow-inner shadow-violet-900/40 ring-1 ring-inset ring-violet-200/10">
+				<Sparkles class="w-8 h-8 text-violet-200" />
 			</div>
-			<h2 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Create Account</h2>
-			<p class="text-slate-500 font-medium">Join the next generation of insurance</p>
+			<h2 class="mb-2 text-3xl font-black tracking-tight text-white">Create Account</h2>
+			<p class="font-medium text-slate-300">Join the next generation of insurance</p>
 		</div>
 
 		<form class="mt-10 space-y-6" onsubmit={handleSubmit}>
@@ -104,7 +105,7 @@
 				/>
 
 				<div class="space-y-2">
-					<label for="register-role" class="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Account Type</label>
+					<label for="register-role" class="ml-1 block text-xs font-bold uppercase tracking-widest text-slate-400">Account Type</label>
 					<select
 						id="register-role"
 						bind:value={role}
@@ -133,10 +134,10 @@
 				Get Started
 			</Button>
 
-			<div class="text-center pt-4 border-t border-slate-100">
-                <p class="text-sm text-slate-500 font-medium">
+			<div class="border-t border-white/8 pt-4 text-center">
+                <p class="text-sm font-medium text-slate-400">
                     Already a member? 
-                    <a href="/login" class="text-indigo-600 font-black hover:text-indigo-700 transition-colors ml-1">
+                    <a href="/login" class="ml-1 font-black text-violet-300 transition-colors hover:text-white">
                         Sign In
                     </a>
                 </p>

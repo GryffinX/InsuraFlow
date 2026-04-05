@@ -27,16 +27,17 @@
 
 @layer base {
   html {
-    color-scheme: light;
+    color-scheme: dark;
     scroll-behavior: smooth;
   }
 
   body {
     min-height: 100vh;
     background:
-      radial-gradient(circle at top left, rgba(192, 132, 252, 0.24), transparent 30%),
-      radial-gradient(circle at top right, rgba(103, 232, 249, 0.12), transparent 24%),
-      linear-gradient(180deg, #f5efff 0%, #eef2ff 44%, #eef4fb 100%);
+      radial-gradient(circle at top left, rgba(168, 85, 247, 0.2), transparent 28%),
+      radial-gradient(circle at top right, rgba(103, 232, 249, 0.08), transparent 22%),
+      linear-gradient(180deg, #171433 0%, #13182d 42%, #0b1120 100%);
+    color: var(--text-1);
     @apply antialiased;
   }
 
