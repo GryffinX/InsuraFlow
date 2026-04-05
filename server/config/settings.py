@@ -20,10 +20,16 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Explicitly load .env from the same directory as manage.py
+# Explicitly load .env files from the same directory as manage.py.
+# `.env.local` is loaded last so it can override the shared defaults in `.env`.
 ENV_PATH = BASE_DIR / ".env"
+ENV_LOCAL_PATH = BASE_DIR / ".env.local"
+
 if ENV_PATH.exists():
     load_dotenv(ENV_PATH, override=True)
+
+if ENV_LOCAL_PATH.exists():
+    load_dotenv(ENV_LOCAL_PATH, override=True)
 
 
 def get_env_list(name, default):
@@ -65,9 +71,9 @@ def build_local_database_url():
 SECRET_KEY=os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = is_truthy(os.getenv("DEBUG", "True"))
+DEBUG = is_truthy(os.getenv("DEBUG", "False"))
 
-ALLOWED_HOSTS = get_env_list("ALLOWED_HOSTS", ["127.0.0.1", "localhost"])
+ALLOWED_HOSTS = get_env_list("ALLOWED_HOSTS", ["*"])
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
 
@@ -237,7 +243,7 @@ SIMPLE_JWT = {
 }
 
 # CORS Configuration
-CORS_ALLOW_ALL_ORIGINS = is_truthy(os.getenv("CORS_ALLOW_ALL_ORIGINS", "False"))
+CORS_ALLOW_ALL_ORIGINS = is_truthy(os.getenv("CORS_ALLOW_ALL_ORIGINS", "True"))
 CORS_ALLOWED_ORIGINS = unique(get_env_list("CORS_ALLOWED_ORIGINS", [
     FRONTEND_URL,
     "http://127.0.0.1:5173",

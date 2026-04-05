@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-pip install -r server/requirements.txt
-python server/manage.py collectstatic --noinput
-python server/manage.py migrate
+pip install -r requirements.txt
+cd server
+python manage.py collectstatic --noinput
+python manage.py migrate

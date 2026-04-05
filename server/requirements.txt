@@ -10,6 +10,7 @@ drf-yasg==1.21.14
 graphviz==0.21
 inflection==0.5.1
 packaging==26.0
+Pillow==11.3.0
 psycopg2-binary==2.9.11
 pydot==4.0.1
 PyJWT==2.11.0
