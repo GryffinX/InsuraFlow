@@ -11,11 +11,9 @@
     import Tag from 'lucide-svelte/icons/tag';
 
     let userPolicies = $state<any[]>([]);
-    let serviceProviders = $state<any[]>([]);
     
     let formData = $state({
         user_policy_id: '',
-        service_provider_id: '',
         claim_amount: '',
         claim_reason: '',
     });
@@ -28,13 +26,9 @@
 
     onMount(async () => {
         try {
-            const [policiesRes, providersRes] = await Promise.all([
-                api.get('user-policies/'),
-                api.get('service-providers/')
-            ]);
+            const policiesRes = await api.get('user-policies/');
             const rawPolicies = policiesRes.data.results || policiesRes.data;
             userPolicies = rawPolicies.filter((p: any) => p.status === 'active');
-            serviceProviders = providersRes.data.results || providersRes.data;
         } catch (error: any) {
             const msg = error.response?.data?.error || 'Failed to load required data';
             toast.error(msg);
@@ -48,7 +42,12 @@
         
         isLoading = true;
         try {
-            await api.post('claims/', formData);
+            const payload = {
+                user_policy_id: formData.user_policy_id,
+                claim_amount: formData.claim_amount,
+                claim_reason: formData.claim_reason,
+            };
+            await api.post('claims/', payload);
             toast.success('Claim filed successfully');
             goto('/dashboard');
         } catch (error: any) {
@@ -119,7 +118,7 @@
                 {/if}
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 gap-8">
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider" for="claim_amount">
                         Claim Amount ($)
@@ -133,22 +132,6 @@
                         bind:value={formData.claim_amount}
                         required
                     />
-                </div>
-
-                <div class="space-y-2">
-                    <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider" for="provider">
-                        Service Provider
-                    </label>
-                    <select
-                        id="provider"
-                        class="block w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
-                        bind:value={formData.service_provider_id}
-                    >
-                        <option value="">Select Hospital/Garage</option>
-                        {#each serviceProviders as sp}
-                            <option value={sp.id}>{sp.name} - {sp.city}</option>
-                        {/each}
-                    </select>
                 </div>
             </div>
 
