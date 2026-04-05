@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
+from urllib.parse import quote_plus
+
+import dj_database_url
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,6 +26,38 @@ if ENV_PATH.exists():
     load_dotenv(ENV_PATH, override=True)
 
 
+def get_env_list(name, default):
+    value = os.getenv(name)
+    if not value:
+        return default
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def unique(values):
+    return list(dict.fromkeys(values))
+
+
+def is_truthy(value):
+    return str(value).lower() in ["true", "1", "yes", "on"]
+
+
+def build_local_database_url():
+    name = os.getenv("DB_NAME")
+    user = os.getenv("DB_USER")
+    password = os.getenv("DB_PASS")
+    host = os.getenv("DB_HOST", "localhost")
+    port = os.getenv("DB_PORT", "5432")
+
+    if not name or not user:
+        return None
+
+    encoded_user = quote_plus(user)
+    encoded_password = quote_plus(password or "")
+    auth_part = f"{encoded_user}:{encoded_password}" if password else encoded_user
+
+    return f"postgresql://{auth_part}@{host}:{port}/{name}"
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
@@ -30,9 +65,17 @@ if ENV_PATH.exists():
 SECRET_KEY=os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "True").lower() in ["true", "1", "yes"]
+DEBUG = is_truthy(os.getenv("DEBUG", "True"))
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = get_env_list("ALLOWED_HOSTS", ["127.0.0.1", "localhost"])
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS = unique([*ALLOWED_HOSTS, RENDER_EXTERNAL_HOSTNAME])
+    render_origin = f"https://{RENDER_EXTERNAL_HOSTNAME}"
+else:
+    render_origin = None
 
 # Security Settings (enable when using HTTPS in production)
 if not DEBUG:
@@ -63,8 +106,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -97,16 +141,27 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv("DB_NAME"),
-        'USER': os.getenv("DB_USER"),
-        'PASSWORD': os.getenv("DB_PASS"),
-        'HOST': os.getenv("DB_HOST", "localhost"),
-        'PORT': os.getenv("DB_PORT", "5432"),
+database_url = os.getenv("DATABASE_URL") or build_local_database_url()
+
+if database_url:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            database_url,
+            conn_max_age=600,
+            ssl_require=not DEBUG
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv("DB_NAME"),
+            'USER': os.getenv("DB_USER"),
+            'PASSWORD': os.getenv("DB_PASS"),
+            'HOST': os.getenv("DB_HOST", "localhost"),
+            'PORT': os.getenv("DB_PORT", "5432"),
+        }
+    }
 
 
 # Password validation
@@ -143,7 +198,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -173,18 +237,23 @@ SIMPLE_JWT = {
 }
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS = [
+CORS_ALLOW_ALL_ORIGINS = is_truthy(os.getenv("CORS_ALLOW_ALL_ORIGINS", "False"))
+CORS_ALLOWED_ORIGINS = unique(get_env_list("CORS_ALLOWED_ORIGINS", [
+    FRONTEND_URL,
     "http://127.0.0.1:5173",
     "http://localhost:5173",
     "http://127.0.0.1:3000",
     "http://localhost:3000",
-]
+    *([render_origin] if render_origin else []),
+]))
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_TRUSTED_ORIGINS = [
+CSRF_TRUSTED_ORIGINS = unique(get_env_list("CSRF_TRUSTED_ORIGINS", [
+    FRONTEND_URL,
     "http://127.0.0.1:5173",
     "http://localhost:5173",
-]
+    *([render_origin] if render_origin else []),
+]))
 
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
@@ -197,7 +266,6 @@ PROVIDER_SECRET_KEY = os.getenv("PROVIDER_SECRET_KEY", "provider-secret-2026")
 SURVEYOR_SECRET_KEY = os.getenv("SURVEYOR_SECRET_KEY", "surveyor-secret-2026")
 
 REGISTER_SECRET_KEY = os.getenv("REGISTER_SECRET_KEY", "insuraflow-secret-2026") # Fallback or shared
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 LOGGING = {
     'version': 1,

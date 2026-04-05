@@ -1,114 +1,230 @@
-# InsuraFlow 🛡️
+# InsuraFlow
 
-InsuraFlow is a modern, full-stack insurance management ecosystem designed to streamline the lifecycle of insurance policies and claims. Built with a high-performance **Django REST Framework** backend and a reactive **SvelteKit 5** frontend, it provides a seamless experience for customers, providers, agents, and surveyors.
+InsuraFlow is a full-stack insurance management system for customers, providers, agents, surveyors, and admins. It combines a Django REST API with a SvelteKit frontend to manage policy discovery, policy ownership, claims, user verification, and role-based dashboards.
 
----
+## Current Stack
 
-## 🎨 Design Philosophy
-InsuraFlow features a sophisticated **Purple, Emerald, and Amber** theme, focusing on:
-*   **Trust:** Deep purple accents for core professional interactions.
-*   **Vitality:** Emerald green for success states and active coverage.
-*   **Clarity:** Amber for pending actions and critical alerts.
-*   **Modernity:** A "glassmorphism" UI with Inter typography and smooth micro-interactions.
+### Backend
+- Django 6
+- Django REST Framework
+- PostgreSQL
+- JWT auth with `djangorestframework-simplejwt`
+- `django-filter` for filtering and search
+- Swagger/ReDoc via `drf-yasg`
+- Gunicorn for production serving
 
----
+### Frontend
+- SvelteKit 2 / Svelte 5
+- Tailwind CSS 4
+- Axios for API calls
+- `@sveltejs/adapter-node` for deployable SSR output
+- Lucide icons
 
-## 👥 User Roles & Capabilities
+### Infrastructure
+- Docker Compose
+- PostgreSQL 16
+- Redis 7
 
-### 🏢 Provider (Insurer)
-*   **Catalog Management:** Create, edit, and delete insurance policy plans.
-*   **Oversight:** View all claims filed against their specific policies.
-*   **Customer Insights:** Access lists of all users who have purchased their coverage.
-*   **Claim Processing:** Assign registered surveyors to new claims to begin the review phase.
+## Repository Layout
 
-### 🤝 Agent
-*   **Policy Creation:** Design and add new policy plans on behalf of their assigned provider.
-*   **Customer Assistance:** View managed policies and track customer claim statuses.
-*   **Operational Support:** Assign surveyors to claims to expedite the processing flow.
-
-### 🔍 Surveyor
-*   **Task Management:** View a dedicated dashboard of claims specifically assigned to them.
-*   **Decision Making:** Approve or Reject claims based on inspection findings.
-
-### 👤 Customer
-*   **Discovery:** Browse and search the global policy catalog.
-*   **Acquisition:** Purchase insurance plans instantly.
-*   **Self-Service:** File claims for owned policies and track their status in real-time.
-*   **Profile:** Manage personal information and security settings.
-
-### 🔑 Admin
-*   **System Oversight:** Full CRUD access to all users, policies, and claims.
-*   **User Verification:** Act as the gatekeeper by approving or rejecting new registrations.
-
----
-
-## 🚀 Technical Stack
-
-### Backend (Django)
-*   **Architecture:** RESTful API with Django REST Framework (DRF).
-*   **Security:** JWT (SimpleJWT) with `withCredentials` session persistence.
-*   **Database:** PostgreSQL (Production) / SQLite (Local).
-
-### Frontend (SvelteKit 5)
-*   **Framework:** Svelte 5 (Runes) for reactive state management.
-*   **Styling:** Tailwind CSS 4.0 with a custom-engineered modern theme.
-*   **Icons:** Lucide-Svelte for consistent visual language.
-
----
-
-## 🐳 Docker Setup (Recommended)
-
-The easiest way to run InsuraFlow is using Docker Compose.
-
-### 1. Prerequisites
-*   Docker and Docker Compose installed.
-*   A `.env` file in the root directory (see `.env.example`).
-
-### 2. Launch the Ecosystem
-```bash
-docker-compose up --build
+```text
+InsuraFlow/
+|- client/   # SvelteKit frontend
+|- server/   # Django backend
+|- compose.yml
+|- README.md
+|- SYSTEM_FLOW.md
 ```
 
-This will start:
-*   **PostgreSQL:** Port `5432`
-*   **Redis:** Port `6379`
-*   **Django Backend:** Port `8000`
-*   **SvelteKit Frontend:** Port `5173`
+## Roles In The Current App
 
-### 3. Initialize Data
-Once the containers are running, open a new terminal and run:
-```bash
-docker exec -it insuraflow_backend python manage.py seed_data
+- `customer`: browse policies, buy coverage, file claims for owned policies, view personal dashboard and profile
+- `provider`: manage only their own policies, view customers for those policies, view related claims, assign surveyors, manage agents
+- `agent`: view agent-managed policies and claims, assist customers, assign surveyors, file claims on behalf of policy owners through the API
+- `surveyor`: view assigned claims, create inspection reports, approve or reject assigned claims
+- `admin`: manage users, verify or reject registrations, access all policies, claims, settlements, providers, agents, surveyors, and service providers
+
+## Main Features
+
+- Public policy catalog with search, filters, sorting, and side-by-side comparison
+- Role-specific dashboard under the protected app shell
+- JWT-based login, refresh, logout, and current-user profile editing
+- Admin user management with verification and rejection flows
+- Policy purchase flow that creates `UserPolicy` records
+- Claim filing, assignment, approval/rejection, inspection reports, and settlements
+- Swagger docs at `/swagger/` and ReDoc at `/redoc/`
+
+## Environment Variables
+
+There are currently three places to be aware of:
+
+### Root `.env`
+Used by `docker compose`.
+
+Typical keys:
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASS`
+- `SECRET_KEY`
+- `EMAIL_HOST_USER`
+- `EMAIL_HOST_PASSWORD`
+- `RESEND_API_KEY` if you use Resend
+
+### `server/.env`
+Loaded by Django when you run the backend directly.
+
+Common keys:
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASS`
+- `DB_HOST`
+- `DB_PORT`
+- `SECRET_KEY`
+- `FRONTEND_URL`
+- `ALLOWED_HOSTS`
+- `CORS_ALLOWED_ORIGINS`
+- `CSRF_TRUSTED_ORIGINS`
+- `EMAIL_HOST_USER`
+- `EMAIL_HOST_PASSWORD`
+- `RESEND_API_KEY`
+- `ADMIN_SECRET_KEY`
+- `AGENT_SECRET_KEY`
+- `PROVIDER_SECRET_KEY`
+- `SURVEYOR_SECRET_KEY`
+
+### `client/.env`
+Used by the SvelteKit frontend.
+
+Required key:
+- `PUBLIC_API_URL`
+
+Example:
+
+```env
+PUBLIC_API_URL=http://127.0.0.1:8000/api
 ```
 
----
+Do not keep production secrets or personal mail credentials committed in real deployments. Replace them with environment-specific values.
 
-## 🛠️ Manual Local Setup
+## Docker Setup
 
-### Backend Setup
-1. Navigate to the `/server` directory.
-2. Create a virtual environment: `python -m venv venv`.
-3. Activate the venv: `source venv/bin/activate` (Mac/Linux) or `.\venv\Scripts\activate` (Windows).
-4. Install dependencies: `pip install -r requirements.txt`.
-5. Run migrations: `python manage.py migrate`.
-6. Start the server: `python manage.py runserver`.
+### Prerequisites
 
-### Frontend Setup
-1. Navigate to the `/client` directory.
-2. Install dependencies: `npm install`.
-3. Start the development server: `npm run dev`.
+- Docker Desktop or another Docker engine with Compose support
+- The Docker engine must be running
+- A populated root `.env`
 
----
+### Start The Stack
 
-## 🔒 Security Gatekeepers
-To maintain platform integrity, privileged roles are protected by **Secret Keys**. These must be provided during registration:
-*   **Admin Key:** `admin-secret-2026`
-*   **Agent Key:** `agent-secret-2026`
-*   **Provider Key:** `provider-secret-2026`
-*   **Surveyor Key:** `surveyor-secret-2026`
+```bash
+docker compose up --build
+```
 
----
+Services started by `compose.yml`:
 
-## 🧪 Diagnostic Checks
-*   **Backend:** `python manage.py check`
-*   **Frontend:** `npm run check`
+- PostgreSQL on `5432`
+- Redis on `6379`
+- Django API on `8000`
+- SvelteKit frontend on `5173`
+
+Current container behavior:
+
+- Backend runs migrations, then starts Gunicorn
+- Frontend builds and serves the SvelteKit Node output
+- Frontend expects the API at `PUBLIC_API_URL=http://localhost:8000/api` inside Compose
+
+## Manual Local Setup
+
+### Backend
+
+Prerequisites:
+- Python 3.12
+- PostgreSQL running locally
+
+Steps:
+
+```bash
+cd server
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
+
+The backend will be available at `http://127.0.0.1:8000`.
+
+### Frontend
+
+Prerequisites:
+- Node.js 20+
+- npm
+
+Steps:
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+The frontend will be available at `http://127.0.0.1:5173`.
+
+## API Surface
+
+Important current endpoints:
+
+- `POST /api/token/`
+- `POST /api/auth/login/`
+- `POST /api/auth/refresh/`
+- `POST /api/auth/register/`
+- `GET/PATCH /api/auth/me/`
+- `GET /api/users/`
+- `PATCH /api/users/{id}/verify/`
+- `PATCH /api/users/{id}/reject/`
+- `GET /api/policies/`
+- `POST /api/policies/{id}/buy/`
+- `GET /api/policies/{id}/customers/`
+- `GET /api/user-policies/`
+- `GET/POST /api/claims/`
+- `POST /api/claims/{id}/assign_surveyor/`
+- `POST /api/claims/{id}/approve/`
+- `POST /api/claims/{id}/reject/`
+- `GET/POST /api/reports/`
+- `GET/POST /api/settlements/`
+
+## Deployment Notes
+
+- The frontend now uses `@sveltejs/adapter-node`, so `npm run build` creates `client/build/` for Node-based deployment.
+- The backend is configured for PostgreSQL in `server/config/settings.py`; the docs should not assume SQLite fallback.
+- For production, set a strong `SECRET_KEY` and configure:
+  - `ALLOWED_HOSTS`
+  - `FRONTEND_URL`
+  - `CORS_ALLOWED_ORIGINS`
+  - `CSRF_TRUSTED_ORIGINS`
+  - `PUBLIC_API_URL`
+- The current Django deploy checks still warn if `SECRET_KEY` is weak or HSTS is not configured.
+
+## Diagnostics
+
+Backend checks:
+
+```bash
+cd server
+python manage.py check
+python manage.py check --deploy
+```
+
+Frontend checks:
+
+```bash
+cd client
+npm run check
+npm run build
+```
+
+## Current Notes
+
+- There is no `seed_data` management command in the current repository.
+- Registration for privileged roles requires secret keys configured in Django settings.
+- Protected frontend routes live under `client/src/routes/(app)` and redirect unauthenticated users to `/login`.

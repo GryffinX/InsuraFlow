@@ -1,7 +1,10 @@
 import axios from 'axios';
 import { browser } from '$app/environment';
+import { env } from '$env/dynamic/public';
 
-const baseURL = 'http://127.0.0.1:8000/api/';
+const defaultApiUrl = 'http://127.0.0.1:8000/api';
+const configuredApiUrl = env.PUBLIC_API_URL?.trim() || defaultApiUrl;
+const baseURL = `${configuredApiUrl.replace(/\/+$/, '')}/`;
 
 export const api = axios.create({
     baseURL,

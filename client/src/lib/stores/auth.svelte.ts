@@ -6,6 +6,7 @@ export interface User {
     username: string;
     email: string;
     role: 'customer' | 'agent' | 'surveyor' | 'provider' | 'admin';
+    is_verified?: boolean;
     phone?: string;
     address?: string;
     dob?: string;
@@ -21,17 +22,14 @@ function createAuthStore() {
     let loading = $state(false);
 
     async function login(credentials: any) {
-        console.log('Attempting login to http://127.0.0.1:8000/api/token/');
-        const response = await api.post('http://127.0.0.1:8000/api/token/', credentials);
-        console.log('Login response:', response.data);
+        const response = await api.post('token/', credentials);
         const { access, refresh } = response.data;
         
         localStorage.setItem('access_token', access);
         localStorage.setItem('refresh_token', refresh);
         
         // Fetch user info
-        console.log('Fetching user info from http://127.0.0.1:8000/api/auth/me/');
-        const userResponse = await api.get('http://127.0.0.1:8000/api/auth/me/');
+        const userResponse = await api.get('auth/me/');
         const userData = userResponse.data;
         
         localStorage.setItem('user', JSON.stringify(userData));
@@ -39,9 +37,7 @@ function createAuthStore() {
     }
 
     async function register(userData: any) {
-        console.log('Attempting registration to http://127.0.0.1:8000/api/auth/register/');
-        const response = await api.post('http://127.0.0.1:8000/api/auth/register/', userData);
-        console.log('Registration response:', response.data);
+        const response = await api.post('auth/register/', userData);
         return response.data;
     }
 
