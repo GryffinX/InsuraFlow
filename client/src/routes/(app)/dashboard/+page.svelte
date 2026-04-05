@@ -1,11 +1,10 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { auth } from '$lib/stores/auth.svelte';
 	import { api } from '$lib/api/axios';
 	import { onMount } from 'svelte';
 	import Activity from 'lucide-svelte/icons/activity';
 	import AlertCircle from 'lucide-svelte/icons/alert-circle';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import Briefcase from 'lucide-svelte/icons/briefcase';
 	import CheckCircle from 'lucide-svelte/icons/check-circle';
 	import Clock from 'lucide-svelte/icons/clock';
 	import FileText from 'lucide-svelte/icons/file-text';
@@ -14,10 +13,24 @@
 	import Users from 'lucide-svelte/icons/users';
 	import { Button } from '$lib/components';
 
+	type DashboardStat = {
+		label: string;
+		value: string | number;
+		icon: typeof Shield;
+		color: string;
+		bg: string;
+	};
+
+	const statTone = {
+		primary: { color: 'text-violet-200', bg: 'bg-violet-500/14 border border-violet-300/16' },
+		secondary: { color: 'text-amber-200', bg: 'bg-amber-500/14 border border-amber-300/16' },
+		tertiary: { color: 'text-emerald-200', bg: 'bg-emerald-500/14 border border-emerald-300/16' }
+	};
+
 	let stats = $state({
-		primary: { label: '', value: 0 as string | number, icon: Shield, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-		secondary: { label: '', value: 0 as string | number, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' },
-		tertiary: { label: '', value: 0 as string | number, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' }
+		primary: { label: '', value: 0 as string | number, icon: Shield, ...statTone.primary } satisfies DashboardStat,
+		secondary: { label: '', value: 0 as string | number, icon: FileText, ...statTone.secondary } satisfies DashboardStat,
+		tertiary: { label: '', value: 0 as string | number, icon: CheckCircle, ...statTone.tertiary } satisfies DashboardStat
 	});
 
 	let mainData = $state<any[]>([]);
@@ -36,9 +49,9 @@
 				mainData = policiesRes.data.results || (Array.isArray(policiesRes.data) ? policiesRes.data : []);
 				secondaryData = claimsRes.data.results || (Array.isArray(claimsRes.data) ? claimsRes.data : []);
 				
-				stats.primary = { label: 'Active Policies', value: mainData.filter(p => p.status === 'active').length, icon: Shield, color: 'text-indigo-600', bg: 'bg-indigo-50' };
-				stats.secondary = { label: 'Pending Claims', value: secondaryData.filter(c => c.status === 'filed').length, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' };
-				stats.tertiary = { label: 'Total Coverage', value: `$${mainData.reduce((acc, p) => acc + parseFloat(p.policy?.coverage_amount || 0), 0).toLocaleString()}`, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' };
+				stats.primary = { label: 'Active Policies', value: mainData.filter((p) => p.status === 'active').length, icon: Shield, ...statTone.primary };
+				stats.secondary = { label: 'Pending Claims', value: secondaryData.filter((c) => c.status === 'filed').length, icon: FileText, ...statTone.secondary };
+				stats.tertiary = { label: 'Total Coverage', value: `$${mainData.reduce((acc, p) => acc + parseFloat(p.policy?.coverage_amount || 0), 0).toLocaleString()}`, icon: CheckCircle, ...statTone.tertiary };
 			} else if (role === 'provider') {
 				const [policiesRes, claimsRes, customersRes] = await Promise.all([
 					api.get('policies/'),
@@ -48,10 +61,10 @@
 				mainData = policiesRes.data.results || (Array.isArray(policiesRes.data) ? policiesRes.data : []);
 				secondaryData = claimsRes.data.results || (Array.isArray(claimsRes.data) ? claimsRes.data : []);
 
-				stats.primary = { label: 'Our Policies', value: mainData.length, icon: Shield, color: 'text-indigo-600', bg: 'bg-indigo-50' };
-				stats.secondary = { label: 'Policy Claims', value: secondaryData.length, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' };
+				stats.primary = { label: 'Our Policies', value: mainData.length, icon: Shield, ...statTone.primary };
+				stats.secondary = { label: 'Policy Claims', value: secondaryData.length, icon: FileText, ...statTone.secondary };
 				const customerData = customersRes.data.results || (Array.isArray(customersRes.data) ? customersRes.data : []);
-				stats.tertiary = { label: 'Total Customers', value: customerData.length, icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-50' };
+				stats.tertiary = { label: 'Total Customers', value: customerData.length, icon: Users, ...statTone.tertiary };
 			} else if (role === 'agent') {
 				const [policiesRes, claimsRes] = await Promise.all([
 					api.get('user-policies/'),
@@ -60,16 +73,16 @@
 				mainData = policiesRes.data.results || (Array.isArray(policiesRes.data) ? policiesRes.data : []);
 				secondaryData = claimsRes.data.results || (Array.isArray(claimsRes.data) ? claimsRes.data : []);
 
-				stats.primary = { label: 'Managed Policies', value: mainData.length, icon: Shield, color: 'text-indigo-600', bg: 'bg-indigo-50' };
-				stats.secondary = { label: 'Customer Claims', value: secondaryData.length, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' };
-				stats.tertiary = { label: 'Active Clients', value: new Set(mainData.map(p => p.user?.id || p.user)).size, icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-50' };
+				stats.primary = { label: 'Managed Policies', value: mainData.length, icon: Shield, ...statTone.primary };
+				stats.secondary = { label: 'Customer Claims', value: secondaryData.length, icon: FileText, ...statTone.secondary };
+				stats.tertiary = { label: 'Active Clients', value: new Set(mainData.map((p) => p.user?.id || p.user)).size, icon: Users, ...statTone.tertiary };
 			} else if (role === 'surveyor') {
 				const claimsRes = await api.get('claims/');
 				mainData = claimsRes.data.results || (Array.isArray(claimsRes.data) ? claimsRes.data : []);
 				
-				stats.primary = { label: 'Assigned Claims', value: mainData.length, icon: FileText, color: 'text-indigo-600', bg: 'bg-indigo-50' };
-				stats.secondary = { label: 'Pending Review', value: mainData.filter(c => c.status === 'under_review').length, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' };
-				stats.tertiary = { label: 'Completed', value: mainData.filter(c => ['approved', 'rejected', 'settled'].includes(c.status)).length, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' };
+				stats.primary = { label: 'Assigned Claims', value: mainData.length, icon: FileText, ...statTone.primary };
+				stats.secondary = { label: 'Pending Review', value: mainData.filter((c) => c.status === 'under_review').length, icon: Clock, ...statTone.secondary };
+				stats.tertiary = { label: 'Completed', value: mainData.filter((c) => ['approved', 'rejected', 'settled'].includes(c.status)).length, icon: CheckCircle, ...statTone.tertiary };
 			} else if (role === 'admin') {
 				const [policiesRes, claimsRes] = await Promise.all([
 					api.get('policies/'),
@@ -78,9 +91,9 @@
 				mainData = policiesRes.data.results || (Array.isArray(policiesRes.data) ? policiesRes.data : []);
 				secondaryData = claimsRes.data.results || (Array.isArray(claimsRes.data) ? claimsRes.data : []);
 
-				stats.primary = { label: 'Total Policies', value: mainData.length, icon: Shield, color: 'text-indigo-600', bg: 'bg-indigo-50' };
-				stats.secondary = { label: 'Total Claims', value: secondaryData.length, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' };
-				stats.tertiary = { label: 'System Health', value: 'Optimal', icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' };
+				stats.primary = { label: 'Total Policies', value: mainData.length, icon: Shield, ...statTone.primary };
+				stats.secondary = { label: 'Total Claims', value: secondaryData.length, icon: FileText, ...statTone.secondary };
+				stats.tertiary = { label: 'System Health', value: 'Optimal', icon: Activity, ...statTone.tertiary };
 			}
 		} catch (error) {
 			console.error('Failed to load dashboard data', error);
@@ -94,44 +107,44 @@
 			case 'active':
 			case 'approved':
 			case 'settled':
-				return { icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-50' };
+				return { icon: CheckCircle, color: 'text-emerald-200', bg: 'bg-emerald-500/14' };
 			case 'pending':
 			case 'filed':
 			case 'under_review':
-				return { icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50' };
+				return { icon: Clock, color: 'text-amber-200', bg: 'bg-amber-500/14' };
 			case 'rejected':
 			case 'cancelled':
-				return { icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-50' };
+				return { icon: AlertCircle, color: 'text-rose-200', bg: 'bg-rose-500/14' };
 			default:
-				return { icon: AlertCircle, color: 'text-slate-500', bg: 'bg-slate-50' };
+				return { icon: AlertCircle, color: 'text-slate-200', bg: 'bg-slate-500/12' };
 		}
 	}
 </script>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12">
+    <div class="mb-12 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
         <div class="animate-fade-in">
-            <div class="flex items-center gap-3 mb-3">
-                <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-widest">
+            <div class="mb-3 flex items-center gap-3">
+                <span class="rounded-full border border-violet-300/18 bg-violet-500/14 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-violet-100">
                     {role} Dashboard
                 </span>
             </div>
-            <h1 class="text-4xl font-black text-slate-900 tracking-tight">Welcome, {auth.user?.username}</h1>
-            <p class="text-slate-500 mt-1 font-medium text-lg">Here's an overview of your InsuraFlow workspace.</p>
+            <h1 class="text-4xl font-black tracking-tight text-slate-50">Welcome, {auth.user?.username}</h1>
+            <p class="mt-1 text-lg font-medium text-slate-300">Here's an overview of your InsuraFlow workspace.</p>
         </div>
-        
+
         <div class="flex gap-3">
             {#if role === 'customer'}
                 <a href="/claims/new">
                     <Button class="h-12 px-6">
-                        <Plus class="w-5 h-5 mr-2" /> File a Claim
+                        <Plus class="mr-2 h-5 w-5" /> File a Claim
                     </Button>
                 </a>
             {/if}
             {#if role === 'provider' || role === 'admin'}
                 <a href="/policies/new">
                     <Button class="h-12 px-6">
-                        <Plus class="w-5 h-5 mr-2" /> Create Policy
+                        <Plus class="mr-2 h-5 w-5" /> Create Policy
                     </Button>
                 </a>
             {/if}
@@ -139,78 +152,78 @@
     </div>
 
 	<!-- Stats Grid -->
-	<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+	<div class="mb-12 grid grid-cols-1 gap-8 md:grid-cols-3">
 		{#each Object.values(stats) as stat}
-			<div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-6 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
-				<div class={`${stat.bg} ${stat.color} p-5 rounded-2xl`}>
-					<stat.icon class="w-7 h-7" />
+			<div class="dashboard-card flex items-center gap-6 p-8 transition-all duration-300 hover:-translate-y-1 hover:border-violet-300/22 hover:shadow-[0_28px_70px_rgba(76,29,149,0.26)]">
+				<div class={`${stat.bg} ${stat.color} rounded-2xl p-5`}>
+					<stat.icon class="h-7 w-7" />
 				</div>
 				<div>
-					<p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-					<p class="text-3xl font-black text-slate-900">{stat.value}</p>
+					<p class="mb-1 text-xs font-black uppercase tracking-widest text-slate-400">{stat.label}</p>
+					<p class="text-3xl font-black text-slate-50">{stat.value}</p>
 				</div>
 			</div>
 		{/each}
 	</div>
 
-	<div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+	<div class="grid grid-cols-1 gap-12 lg:grid-cols-2">
 		<!-- Primary Data List -->
-		<div class="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-			<div class="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-				<h2 class="text-2xl font-black text-slate-900 tracking-tight">
+		<div class="dashboard-card flex flex-col overflow-hidden">
+			<div class="flex items-center justify-between border-b border-white/8 bg-white/[0.03] p-8">
+				<h2 class="text-2xl font-black tracking-tight text-slate-50">
 					{role === 'surveyor' ? 'Assigned Claims' : 'Recent Policies'}
 				</h2>
-				<a href={role === 'surveyor' ? '/claims' : '/policies'} class="text-indigo-600 font-bold hover:text-indigo-700 flex items-center gap-1 transition-all hover:gap-2">
-					View all <ArrowRight class="w-4 h-4" />
+				<a href={role === 'surveyor' ? '/claims' : '/policies'} class="flex items-center gap-1 font-bold text-violet-200 transition-all hover:gap-2 hover:text-violet-100">
+					View all <ArrowRight class="h-4 w-4" />
 				</a>
 			</div>
-			<div class="divide-y divide-slate-50">
+			<div class="divide-y divide-white/6">
 				{#if isLoading}
 					{#each Array(3) as _}
-						<div class="p-8 animate-pulse flex gap-6">
-							<div class="w-14 h-14 bg-slate-100 rounded-2xl"></div>
+						<div class="flex gap-6 p-8 animate-pulse">
+							<div class="h-14 w-14 rounded-2xl bg-white/6"></div>
 							<div class="flex-grow space-y-3">
-								<div class="h-5 bg-slate-50 rounded-lg w-1/3"></div>
-								<div class="h-4 bg-slate-50 rounded-lg w-1/4"></div>
+								<div class="h-5 w-1/3 rounded-lg bg-white/6"></div>
+								<div class="h-4 w-1/4 rounded-lg bg-white/6"></div>
 							</div>
 						</div>
 					{/each}
 				{:else if mainData.length > 0}
 					{#each mainData.slice(0, 5) as item}
 						{@const statusStyle = getStatusIcon(item.status || 'active')}
-						<div class="p-8 flex items-center justify-between group hover:bg-slate-50/50 transition-colors">
+						<div class="group flex items-center justify-between p-8 transition-colors hover:bg-white/[0.03]">
 							<div class="flex items-center gap-6">
-								<div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-slate-400 group-hover:text-indigo-600 transition-colors">
+								<div class="rounded-2xl border border-white/8 bg-white/[0.04] p-4 text-slate-300 transition-colors group-hover:border-violet-300/18 group-hover:bg-violet-500/10 group-hover:text-violet-100">
 									{#if role === 'surveyor'}
-										<FileText class="w-6 h-6" />
+										<FileText class="h-6 w-6" />
 									{:else}
-										<Shield class="w-6 h-6" />
+										<Shield class="h-6 w-6" />
 									{/if}
 								</div>
 								<div>
 									{#if role === 'surveyor'}
-										<p class="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors tracking-tight">Claim #{item.id}</p>
-										<p class="text-sm font-medium text-slate-500">{item.user_policy?.policy?.title || 'Unknown'}</p>
+										<p class="text-base font-bold tracking-tight text-slate-50 transition-colors group-hover:text-violet-100">Claim #{item.id}</p>
+										<p class="text-sm font-medium text-slate-300">{item.user_policy?.policy?.title || 'Unknown'}</p>
 									{:else if role === 'customer' || role === 'agent'}
-										<p class="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors tracking-tight">{item.policy?.title || 'Unknown'}</p>
-										<p class="text-sm font-medium text-slate-500">{item.policy_number} • {item.policy?.policy_type || 'Unknown'}</p>
+										<p class="text-base font-bold tracking-tight text-slate-50 transition-colors group-hover:text-violet-100">{item.policy?.title || 'Unknown'}</p>
+										<p class="text-sm font-medium text-slate-300">{item.policy_number} • {item.policy?.policy_type || 'Unknown'}</p>
 									{:else}
-										<p class="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors tracking-tight">{item.title || item.policy_number}</p>
-										<p class="text-sm font-medium text-slate-500 capitalize">{item.policy_type || 'Policy'}</p>
+										<p class="text-base font-bold tracking-tight text-slate-50 transition-colors group-hover:text-violet-100">{item.title || item.policy_number}</p>
+										<p class="text-sm font-medium capitalize text-slate-300">{item.policy_type || 'Policy'}</p>
 									{/if}
 								</div>
 							</div>
-							<span class={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${statusStyle.bg} ${statusStyle.color} border-current/10`}>
+							<span class={`rounded-full border border-current/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest ${statusStyle.bg} ${statusStyle.color}`}>
 								{item.status || 'active'}
 							</span>
 						</div>
 					{/each}
 				{:else}
 					<div class="p-20 text-center">
-						<div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            <Activity class="w-8 h-8 text-slate-200" />
+						<div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/6 bg-white/[0.04]">
+                            <Activity class="h-8 w-8 text-slate-500" />
                         </div>
-						<p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Nothing to show yet</p>
+						<p class="text-xs font-bold uppercase tracking-widest text-slate-400">Nothing to show yet</p>
 					</div>
 				{/if}
 			</div>
@@ -218,46 +231,46 @@
 
 		<!-- Secondary Data List -->
 		{#if role !== 'surveyor'}
-		<div class="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-			<div class="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-				<h2 class="text-2xl font-black text-slate-900 tracking-tight">Recent Claims</h2>
-				<a href="/claims" class="text-indigo-600 font-bold hover:text-indigo-700 flex items-center gap-1 transition-all hover:gap-2">
-					View all <ArrowRight class="w-4 h-4" />
+		<div class="dashboard-card flex flex-col overflow-hidden">
+			<div class="flex items-center justify-between border-b border-white/8 bg-white/[0.03] p-8">
+				<h2 class="text-2xl font-black tracking-tight text-slate-50">Recent Claims</h2>
+				<a href="/claims" class="flex items-center gap-1 font-bold text-violet-200 transition-all hover:gap-2 hover:text-violet-100">
+					View all <ArrowRight class="h-4 w-4" />
 				</a>
 			</div>
-			<div class="divide-y divide-slate-50">
+			<div class="divide-y divide-white/6">
 				{#if isLoading}
 					{#each Array(3) as _}
-						<div class="p-8 animate-pulse flex gap-6">
-							<div class="w-14 h-14 bg-slate-100 rounded-2xl"></div>
+						<div class="flex gap-6 p-8 animate-pulse">
+							<div class="h-14 w-14 rounded-2xl bg-white/6"></div>
 							<div class="flex-grow space-y-3">
-								<div class="h-5 bg-slate-50 rounded-lg w-1/3"></div>
-								<div class="h-4 bg-slate-50 rounded-lg w-1/4"></div>
+								<div class="h-5 w-1/3 rounded-lg bg-white/6"></div>
+								<div class="h-4 w-1/4 rounded-lg bg-white/6"></div>
 							</div>
 						</div>
 					{/each}
 				{:else if secondaryData.length > 0}
 					{#each secondaryData.slice(0, 5) as claim}
 						{@const status = getStatusIcon(claim.status)}
-						<div class="p-8 flex items-center justify-between hover:bg-slate-50/50 transition-colors group">
+						<div class="group flex items-center justify-between p-8 transition-colors hover:bg-white/[0.03]">
 							<div class="flex items-center gap-6">
-								<div class={`${status.bg} ${status.color} p-4 rounded-2xl border border-current/10 shadow-sm group-hover:scale-110 transition-transform`}>
-									<status.icon class="w-6 h-6" />
+								<div class={`${status.bg} ${status.color} rounded-2xl border border-current/10 p-4 transition-transform group-hover:scale-110`}>
+									<status.icon class="h-6 w-6" />
 								</div>
 								<div>
-									<p class="text-base font-bold text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">Claim #{claim.id}</p>
-									<p class="text-sm font-medium text-slate-500 uppercase tracking-tight">{claim.status} • {new Date(claim.claim_date).toLocaleDateString()}</p>
+									<p class="text-base font-bold tracking-tight text-slate-50 transition-colors group-hover:text-violet-100">Claim #{claim.id}</p>
+									<p class="text-sm font-medium uppercase tracking-tight text-slate-300">{claim.status} • {new Date(claim.claim_date).toLocaleDateString()}</p>
 								</div>
 							</div>
-							<p class="text-lg font-black text-slate-900">${parseFloat(claim.claim_amount).toLocaleString()}</p>
+							<p class="text-lg font-black text-slate-50">${parseFloat(claim.claim_amount).toLocaleString()}</p>
 						</div>
 					{/each}
 				{:else}
 					<div class="p-20 text-center">
-                        <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            <FileText class="w-8 h-8 text-slate-200" />
+                        <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/6 bg-white/[0.04]">
+                            <FileText class="h-8 w-8 text-slate-500" />
                         </div>
-						<p class="text-slate-400 font-bold uppercase tracking-widest text-xs mb-6">No recent claims</p>
+						<p class="mb-6 text-xs font-bold uppercase tracking-widest text-slate-400">No recent claims</p>
 						{#if role === 'customer'}
 							<a href="/claims/new">
 								<Button variant="outline" size="sm">File your first claim</Button>
@@ -270,3 +283,4 @@
 		{/if}
 	</div>
 </div>
+
