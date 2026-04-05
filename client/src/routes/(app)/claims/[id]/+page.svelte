@@ -51,115 +51,115 @@
 
     function getStatusIcon(status: string) {
         switch (status?.toLowerCase()) {
-            case 'approved': return { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' };
-            case 'rejected': return { icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' };
-            case 'under_review': return { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' };
-            case 'settled': return { icon: CheckCircle2, color: 'text-indigo-600', bg: 'bg-indigo-50' };
-            default: return { icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' };
+            case 'approved': return { icon: CheckCircle2, color: 'text-emerald-200', bg: 'bg-emerald-500/14' };
+            case 'rejected': return { icon: AlertCircle, color: 'text-rose-200', bg: 'bg-rose-500/14' };
+            case 'under_review': return { icon: Clock, color: 'text-amber-200', bg: 'bg-amber-500/14' };
+            case 'settled': return { icon: CheckCircle2, color: 'text-violet-200', bg: 'bg-violet-500/14' };
+            default: return { icon: Clock, color: 'text-amber-200', bg: 'bg-amber-500/14' };
         }
     }
 </script>
 
 <div class="max-w-4xl mx-auto px-4 py-12">
     <div class="mb-8 flex items-center gap-4">
-        <button onclick={() => history.back()} class="p-2 hover:bg-slate-100 rounded-full transition-colors">
-            <ArrowLeft class="w-6 h-6 text-slate-600" />
+        <button onclick={() => history.back()} class="p-2 hover:bg-white/10 rounded-full transition-colors group">
+            <ArrowLeft class="w-6 h-6 text-slate-400 group-hover:text-violet-200" />
         </button>
-        <h1 class="text-3xl font-bold text-slate-900">Claim Details</h1>
+        <h1 class="text-3xl font-black tracking-tight text-slate-50">Claim Details</h1>
     </div>
 
     {#if isLoading}
         <div class="animate-pulse space-y-6">
-            <div class="h-40 bg-slate-100 rounded-3xl"></div>
+            <div class="h-40 bg-white/5 rounded-3xl"></div>
             <div class="grid grid-cols-2 gap-6">
-                <div class="h-32 bg-slate-50 rounded-2xl"></div>
-                <div class="h-32 bg-slate-50 rounded-2xl"></div>
+                <div class="h-32 bg-white/5 rounded-2xl"></div>
+                <div class="h-32 bg-white/5 rounded-2xl"></div>
             </div>
         </div>
     {:else if claim}
         {@const status = getStatusIcon(claim.status)}
         <div class="space-y-8">
-            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class={`p-8 ${status.bg} border-b border-slate-100 flex justify-between items-center`}>
-                    <div class="flex items-center gap-4">
-                        <div class={`p-3 rounded-2xl bg-white shadow-sm ${status.color}`}>
+            <div class="dashboard-card overflow-hidden">
+                <div class={`p-8 ${status.bg} border-b border-white/8 flex justify-between items-center`}>
+                    <div class="flex items-center gap-6">
+                        <div class={`p-4 rounded-2xl bg-white/10 backdrop-blur-md shadow-lg ${status.color}`}>
                             <status.icon class="w-8 h-8" />
                         </div>
                         <div>
-                            <p class="text-xs font-bold uppercase tracking-widest opacity-60">Claim Status</p>
-                            <h2 class={`text-2xl font-black capitalize ${status.color}`}>{claim.status.replace('_', ' ')}</h2>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Claim Status</p>
+                            <h2 class={`text-3xl font-black capitalize tracking-tight ${status.color}`}>{claim.status.replace('_', ' ')}</h2>
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="text-xs font-bold uppercase tracking-widest text-slate-400">Claim ID</p>
-                        <p class="text-xl font-mono font-bold text-slate-900">#{claim.id}</p>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Claim ID</p>
+                        <p class="text-xl font-mono font-black text-slate-50">#{claim.id}</p>
                     </div>
                 </div>
 
                 <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div class="space-y-1">
-                        <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Amount Claimed</p>
-                        <p class="text-2xl font-black text-slate-900">${parseFloat(claim.claim_amount).toLocaleString()}</p>
+                        <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Amount Claimed</p>
+                        <p class="text-3xl font-black text-slate-50">${parseFloat(claim.claim_amount).toLocaleString()}</p>
                     </div>
                     <div class="space-y-1">
-                        <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Date Filed</p>
-                        <p class="text-lg font-bold text-slate-900">{new Date(claim.claim_date).toLocaleDateString()}</p>
+                        <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Date Filed</p>
+                        <p class="text-lg font-bold text-slate-50">{new Date(claim.claim_date).toLocaleDateString()}</p>
                     </div>
                     <div class="space-y-1">
-                        <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Policy Number</p>
-                        <p class="text-lg font-bold text-indigo-600 font-mono">{claim.user_policy?.policy_number || 'N/A'}</p>
+                        <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Policy Number</p>
+                        <p class="text-lg font-bold text-violet-300 font-mono tracking-wider">{claim.user_policy?.policy_number || 'N/A'}</p>
                     </div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-                    <h3 class="font-bold text-slate-900 flex items-center gap-2">
-                        <FileText class="w-5 h-5 text-indigo-600" /> Reason for Claim
+                <div class="dashboard-card p-8 space-y-6">
+                    <h3 class="font-bold text-slate-50 flex items-center gap-2">
+                        <FileText class="w-5 h-5 text-violet-400" /> Reason for Claim
                     </h3>
-                    <p class="text-slate-600 leading-relaxed italic">
+                    <p class="text-slate-300 leading-relaxed italic text-lg opacity-90">
                         "{claim.claim_reason}"
                     </p>
                 </div>
 
-                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-                    <h3 class="font-bold text-slate-900 flex items-center gap-2">
-                        <Shield class="w-5 h-5 text-indigo-600" /> Associated Policy
+                <div class="dashboard-card p-8 space-y-6">
+                    <h3 class="font-bold text-slate-50 flex items-center gap-2">
+                        <Shield class="w-5 h-5 text-violet-400" /> Associated Policy
                     </h3>
-                    <div class="flex items-center gap-4">
-                        <div class="bg-slate-100 p-3 rounded-xl text-slate-600">
+                    <div class="flex items-center gap-4 group">
+                        <div class="bg-white/5 p-4 rounded-2xl text-slate-400 group-hover:bg-violet-500/10 group-hover:text-violet-200 transition-colors">
                             <Shield class="w-6 h-6" />
                         </div>
                         <div>
-                            <p class="font-bold text-slate-900">{claim.user_policy?.policy?.title || 'Unknown Policy'}</p>
-                            <p class="text-xs text-slate-500 uppercase font-medium">{claim.user_policy?.policy?.policy_type || 'Insurance'}</p>
+                            <p class="font-bold text-slate-50 group-hover:text-violet-100 transition-colors">{claim.user_policy?.policy?.title || 'Unknown Policy'}</p>
+                            <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-0.5">{claim.user_policy?.policy?.policy_type || 'Insurance'}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             {#if claim.assigned_surveyor}
-                <div class="bg-indigo-50 border border-indigo-100 p-8 rounded-3xl flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-indigo-600 border border-indigo-100">
-                            <User class="w-6 h-6" />
+                <div class="bg-violet-500/10 border border-violet-300/16 p-8 rounded-[30px] flex items-center justify-between">
+                    <div class="flex items-center gap-6">
+                        <div class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-violet-200 border border-white/10 shadow-lg">
+                            <User class="w-7 h-7" />
                         </div>
                         <div>
-                            <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Assigned Surveyor</p>
-                            <p class="text-lg font-bold text-indigo-900">{claim.assigned_surveyor.username}</p>
+                            <p class="text-[10px] font-black text-violet-300 uppercase tracking-widest mb-1">Assigned Surveyor</p>
+                            <p class="text-xl font-black text-slate-50">{claim.assigned_surveyor.username}</p>
                         </div>
                     </div>
-                    <div class="text-right text-indigo-600">
-                        <p class="text-sm font-medium">{claim.assigned_surveyor.email}</p>
-                        <p class="text-xs opacity-75">{claim.assigned_surveyor.phone || ''}</p>
+                    <div class="text-right">
+                        <p class="text-base font-bold text-slate-200 mb-0.5">{claim.assigned_surveyor.email}</p>
+                        <p class="text-xs font-medium text-slate-400 tracking-wide">{claim.assigned_surveyor.phone || ''}</p>
                     </div>
                 </div>
             {/if}
 
             {#if claim.status === 'under_review' && (auth.user?.role === 'admin' || (auth.user?.role === 'surveyor' && claim.assigned_surveyor?.id === auth.user?.id))}
-                <div class="pt-8 border-t border-slate-100 flex gap-4">
+                <div class="pt-8 border-t border-white/8 flex gap-6">
                     <Button 
-                        class="flex-grow h-14 text-lg font-bold bg-emerald-600 hover:bg-emerald-700" 
+                        class="flex-grow h-14 text-lg font-black bg-emerald-600 hover:bg-emerald-700 shadow-[0_12px_40px_rgba(16,185,129,0.25)]" 
                         loading={isActioning}
                         onclick={() => handleAction('approve')}
                     >
@@ -167,7 +167,7 @@
                     </Button>
                     <Button 
                         variant="danger" 
-                        class="flex-grow h-14 text-lg font-bold" 
+                        class="flex-grow h-14 text-lg font-black shadow-[0_12px_40px_rgba(244,63,94,0.25)]" 
                         loading={isActioning}
                         onclick={() => handleAction('reject')}
                     >

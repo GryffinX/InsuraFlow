@@ -43,31 +43,31 @@
 
 <div class="max-w-5xl mx-auto px-4 py-12">
     <div class="mb-8 flex items-center gap-4">
-        <button onclick={() => history.back()} class="p-2 hover:bg-slate-100 rounded-full transition-colors">
-            <ArrowLeft class="w-6 h-6 text-slate-600" />
+        <button onclick={() => history.back()} class="p-2 hover:bg-white/10 rounded-full transition-colors group">
+            <ArrowLeft class="w-6 h-6 text-slate-400 group-hover:text-violet-200" />
         </button>
-        <h1 class="text-3xl font-bold text-slate-900">Policy Details</h1>
+        <h1 class="text-3xl font-black tracking-tight text-slate-50">Policy Details</h1>
     </div>
 
     {#if isLoading}
         <div class="animate-pulse space-y-8">
-            <div class="h-64 bg-slate-100 rounded-3xl"></div>
+            <div class="h-64 bg-white/5 rounded-3xl"></div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="h-32 bg-slate-50 rounded-2xl"></div>
-                <div class="h-32 bg-slate-50 rounded-2xl"></div>
-                <div class="h-32 bg-slate-50 rounded-2xl"></div>
+                <div class="h-32 bg-white/5 rounded-2xl"></div>
+                <div class="h-32 bg-white/5 rounded-2xl"></div>
+                <div class="h-32 bg-white/5 rounded-2xl"></div>
             </div>
         </div>
     {:else if policy}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div class="lg:col-span-2 space-y-12">
-                <div class="bg-indigo-600 rounded-3xl p-12 text-white relative overflow-hidden">
+                <div class="bg-violet-600 rounded-3xl p-12 text-white relative overflow-hidden shadow-[0_20px_50px_rgba(124,58,237,0.3)]">
                     <div class="relative z-10">
-                        <span class="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-widest mb-6 inline-block">
+                        <span class="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest mb-6 inline-block border border-white/20">
                             {policy.policy_type} Protection
                         </span>
-                        <h2 class="text-5xl font-black mb-4 leading-tight">{policy.title}</h2>
-                        <p class="text-indigo-100 text-lg leading-relaxed max-w-xl">
+                        <h2 class="text-5xl font-black mb-4 leading-tight tracking-tight">{policy.title}</h2>
+                        <p class="text-violet-100 text-lg font-medium leading-relaxed max-w-xl opacity-90">
                             {policy.description || 'Comprehensive coverage tailored for your peace of mind and long-term security.'}
                         </p>
                     </div>
@@ -75,26 +75,26 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-                        <h3 class="font-bold text-slate-900 flex items-center gap-2">
-                            <Check class="w-5 h-5 text-emerald-500" /> What's Covered
+                    <div class="dashboard-card p-8 space-y-6">
+                        <h3 class="font-bold text-slate-50 flex items-center gap-2">
+                            <Check class="w-5 h-5 text-emerald-400" /> What's Covered
                         </h3>
-                        <ul class="space-y-3">
+                        <ul class="space-y-4">
                             {#each ['Accidental Damages', 'Third-party Liability', 'Natural Calamities', 'Theft Protection'] as feature}
-                                <li class="text-slate-600 text-sm flex items-center gap-2">
-                                    <div class="w-1.5 h-1.5 bg-indigo-400 rounded-full"></div> {feature}
+                                <li class="text-slate-300 text-sm flex items-center gap-3">
+                                    <div class="w-1.5 h-1.5 bg-violet-400 rounded-full shadow-[0_0_8px_rgba(167,139,250,0.5)]"></div> {feature}
                                 </li>
                             {/each}
                         </ul>
                     </div>
-                    <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-                        <h3 class="font-bold text-slate-900 flex items-center gap-2">
-                            <Info class="w-5 h-5 text-indigo-500" /> Additional Benefits
+                    <div class="dashboard-card p-8 space-y-6">
+                        <h3 class="font-bold text-slate-50 flex items-center gap-2">
+                            <Info class="w-5 h-5 text-violet-400" /> Additional Benefits
                         </h3>
-                        <ul class="space-y-3">
+                        <ul class="space-y-4">
                             {#each ['24/7 Roadside Assistance', 'Cashless Hospitalization', 'Global Coverage Access'] as feature}
-                                <li class="text-slate-600 text-sm flex items-center gap-2">
-                                    <div class="w-1.5 h-1.5 bg-indigo-400 rounded-full"></div> {feature}
+                                <li class="text-slate-300 text-sm flex items-center gap-3">
+                                    <div class="w-1.5 h-1.5 bg-violet-400 rounded-full shadow-[0_0_8px_rgba(167,139,250,0.5)]"></div> {feature}
                                 </li>
                             {/each}
                         </ul>
@@ -103,41 +103,41 @@
             </div>
 
             <div class="lg:col-span-1 space-y-8">
-                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl sticky top-8 space-y-8">
+                <div class="dashboard-card p-8 sticky top-8 space-y-8 bg-white/[0.03]">
                     <div>
-                        <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Annual Premium</p>
-                        <p class="text-5xl font-black text-slate-900">${parseFloat(policy.premium_amount).toLocaleString()}</p>
+                        <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Annual Premium</p>
+                        <p class="text-5xl font-black text-slate-50 tracking-tight">${parseFloat(policy.premium_amount).toLocaleString()}</p>
                     </div>
 
-                    <div class="space-y-4 pt-8 border-t border-slate-100">
+                    <div class="space-y-4 pt-8 border-t border-white/8">
                         <div class="flex justify-between items-center text-sm">
-                            <span class="text-slate-500 flex items-center gap-2"><Building class="w-4 h-4" /> Provider</span>
-                            <span class="font-bold text-slate-900">{policy.provider?.company_name || 'N/A'}</span>
+                            <span class="text-slate-400 flex items-center gap-2"><Building class="w-4 h-4" /> Provider</span>
+                            <span class="font-bold text-slate-50">{policy.provider?.company_name || 'N/A'}</span>
                         </div>
                         <div class="flex justify-between items-center text-sm">
-                            <span class="text-slate-500 flex items-center gap-2"><Shield class="w-4 h-4" /> Coverage</span>
-                            <span class="font-bold text-slate-900">${parseFloat(policy.coverage_amount).toLocaleString()}</span>
+                            <span class="text-slate-400 flex items-center gap-2"><Shield class="w-4 h-4" /> Coverage</span>
+                            <span class="font-bold text-slate-50">${parseFloat(policy.coverage_amount).toLocaleString()}</span>
                         </div>
                         <div class="flex justify-between items-center text-sm">
-                            <span class="text-slate-500 flex items-center gap-2"><Calendar class="w-4 h-4" /> Duration</span>
-                            <span class="font-bold text-slate-900">12 Months</span>
+                            <span class="text-slate-400 flex items-center gap-2"><Calendar class="w-4 h-4" /> Duration</span>
+                            <span class="font-bold text-slate-50">12 Months</span>
                         </div>
                     </div>
 
                     <div class="pt-4">
                         {#if auth.user?.role === 'customer'}
                             {#if policy.is_owned}
-                                <div class="bg-emerald-50 text-emerald-700 p-4 rounded-2xl text-center font-bold flex items-center justify-center gap-2">
+                                <div class="bg-emerald-500/14 border border-emerald-300/16 text-emerald-200 p-4 rounded-2xl text-center font-bold flex items-center justify-center gap-2">
                                     <Check class="w-5 h-5" /> You own this policy
                                 </div>
                             {:else}
-                                <Button class="w-full h-14 text-lg font-bold" onclick={buyPolicy}>
+                                <Button class="w-full h-14 text-lg font-black" onclick={buyPolicy}>
                                     <ShoppingCart class="w-5 h-5 mr-2" /> Buy Now
                                 </Button>
                             {/if}
                         {:else if !auth.user}
                             <a href="/login" class="block">
-                                <Button class="w-full h-14 text-lg font-bold">Login to Buy</Button>
+                                <Button class="w-full h-14 text-lg font-black">Login to Buy</Button>
                             </a>
                         {/if}
                     </div>
